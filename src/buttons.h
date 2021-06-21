@@ -19,6 +19,9 @@
 
 #include <zephyr.h>
 
+/** 
+ * @brief Type of button event
+ */
 typedef enum buttonPressType_t {
   BUTTONS_SHORT_PRESS,
   BUTTONS_LONG_PRESS
@@ -26,7 +29,11 @@ typedef enum buttonPressType_t {
 
 typedef void(*buttonHandlerCallback_t)(buttonPressType_t type);
 
+/**
+ * @brief   Init Button press handler
+ *
+ * @param   handler          Pointer to callback function for button events.
+ */
 void buttonsInit(buttonHandlerCallback_t handler);
-int buttonsGetCount(void);
 
 #endif

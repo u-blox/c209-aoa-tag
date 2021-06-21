@@ -17,6 +17,13 @@
 #ifndef __PRODUCTION_H
 #define __PRODUCTION_H
 
+
+/**
+ * @brief   Init the test and configuration UART interface.
+ * @details Enables the UART and initializes the command parser. Configuration and test AT commands will be responded to.
+ *          If no valid command is sent within the first 10 seconds the UART will be disabled and no commands accepted.
+ *          Once a valid AT command is sent the module, it will stay in test/configuration mode until reset, no 10 seconds limit.
+ */
 int productionStart(void);
 
 #endif

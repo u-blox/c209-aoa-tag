@@ -17,6 +17,9 @@
 #ifndef __LEDS_H
 #define __LEDS_H
 
+/** 
+ * @brief LED specifier
+ */
 typedef enum leds_t {
   LED_RED = 0,
   LED_GREEN,
@@ -24,8 +27,27 @@ typedef enum leds_t {
   LED_LAST = LED_BLUE
 } leds_t;
 
+
+/**
+ * @brief   Init RGB LEDs control
+ */
 void ledsInit(void);
+
+/**
+ * @brief   Set state of a specific LED
+ * @details Sets the specified LED either on or off.
+ *
+ * @param   led           The LED to change state of
+ * @param   on            If led shall be set to on or off.
+ */
 void ledsSetState(leds_t led, uint8_t on);
+
+/**
+ * @brief   Toggle a specific LED
+ * @details Sets the specified LED to on of it was off or off if it was on.
+ *
+ * @param   led          The LED to toggle
+ */
 void ledsToggle(leds_t led);
 
 #endif

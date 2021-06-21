@@ -58,7 +58,7 @@ int storageInit(void)
         }
     }
     LOG_INF("NVS Init done");
-    return 0;
+    return rc;
 }
 
 void storageWriteTxPower(int8_t power)

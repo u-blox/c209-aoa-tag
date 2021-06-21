@@ -18,9 +18,26 @@
 #define __STORAGE_H
 #include <inttypes.h>
 
+/**
+ * @brief   Init the NVS storage backend.
+ * 
+ * @return  0, if init was ok.
+ * @return  negative error code, if init failed.
+ */
 int storageInit(void);
 
+/**
+ * @brief   Write TX power to nvs storage
+ *
+ * @param   power            Value to write
+ */
 void storageWriteTxPower(int8_t power);
+
+/**
+ * @brief   Read TX power from nvs storage
+ *
+ * @param   power            pointer to store value in.
+ */
 void storageGetTxPower(int8_t* pPower);
 
 #endif

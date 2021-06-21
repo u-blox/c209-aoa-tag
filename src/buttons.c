@@ -71,11 +71,6 @@ void buttonsInit(buttonHandlerCallback_t handler) {
     LOG_INF("Set up button at %s pin %d", BUTTON_SW2_PIN_PORT, BUTTON_SW2_PIN);
 }
 
-int buttonsGetCount(void)
-{
-    return buttonCount;
-}
-
 static void buttonPressedIsr(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
 {
     uint32_t val;

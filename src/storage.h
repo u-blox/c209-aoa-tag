@@ -20,7 +20,7 @@
 
 /**
  * @brief   Init the NVS storage backend.
- * 
+ *
  * @return  0, if init was ok.
  * @return  negative error code, if init failed.
  */

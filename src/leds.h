@@ -17,7 +17,7 @@
 #ifndef __LEDS_H
 #define __LEDS_H
 
-/** 
+/**
  * @brief LED specifier
  */
 typedef enum leds_t {

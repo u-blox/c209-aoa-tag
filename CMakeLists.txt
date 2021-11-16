@@ -14,10 +14,9 @@
 
 cmake_minimum_required(VERSION 3.13.1)
 
-list(APPEND BOARD_ROOT ${CMAKE_CURRENT_SOURCE_DIR}/u-blox-sho-OpenCPU/zephyr)
 set(DTC_OVERLAY_FILE  "c209.overlay")
 
-set(CONF_FILE ${CMAKE_CURRENT_SOURCE_DIR}/prj_base.conf)
+set(CONF_FILE ${CMAKE_CURRENT_SOURCE_DIR}/prj.conf)
 if(DEFINED RELEASE)
   message("RELEASE BUILD")
   add_definitions("-DRELEASE=${RELEASE}")
@@ -55,4 +54,5 @@ add_definitions("-DBUILD_TIME=${BUILD_TIME}")
 configure_file(version_config.h.in ${CMAKE_BINARY_DIR}/generated/version_config.h)
 include_directories( ${CMAKE_BINARY_DIR}/generated/)
 
-target_compile_options(app PRIVATE -Wall -Werror -Wno-stringop-truncationw)
+#target_compile_options(app PRIVATE -Wall -Werror -Wno-stringop-truncationw)
+target_compile_options(app PRIVATE -Wno-stringop-truncationw)

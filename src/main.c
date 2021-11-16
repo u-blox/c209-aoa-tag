@@ -87,7 +87,7 @@ void main(void)
     buttonsInit(&onButtonPressCb);
 
     __ASSERT(bt_enable(btReadyCb) == 0, "Bluetooth init failed");
-    
+
     k_timer_init(&blinkTimer, timerCb, NULL);
     k_timer_start(&blinkTimer, K_MSEC(advIntervals[advIntervalIndex]), K_NO_WAIT);
     k_thread_start(blinkThreadId);
@@ -121,7 +121,7 @@ static void btReadyCb(int err)
     storageGetTxPower(&txPower);
     LOG_INF("Setting TxPower: %d", txPower);
     setTxPower(BT_HCI_VS_LL_HANDLE_TYPE_ADV, 0, txPower);
-    
+
     btAdvInit(advIntervals[advIntervalIndex], advIntervals[advIntervalIndex], pDefaultGroupNamespace, uuid, txPower);
     btAdvStart();
 }
@@ -130,6 +130,7 @@ static void onButtonPressCb(buttonPressType_t type) {
     LOG_INF("Pressed, type: %d", type);
 
     if (type == BUTTONS_SHORT_PRESS) {
+        if (isAdvRunning) {
             advIntervalIndex = (advIntervalIndex + 1) % NUM_ADV_INTERVALS;
             uint16_t new_adv_interval = advIntervals[advIntervalIndex];
             LOG_INF("New interval: %d", new_adv_interval);
@@ -142,17 +143,18 @@ static void onButtonPressCb(buttonPressType_t type) {
             ledsSetState(LED_BLUE, 1);
 
             k_timer_start(&blinkTimer, K_MSEC(advIntervals[advIntervalIndex]), K_NO_WAIT);
-        } else {
-            isAdvRunning = !isAdvRunning;
-            if (isAdvRunning) {
-                LOG_INF("Adv started");
-                btAdvStart();
-            } else {
-                LOG_INF("Adv stopped");
-                btAdvStop();
-                ledsSetState(LED_BLUE, 1);
-            }
         }
+    } else {
+        isAdvRunning = !isAdvRunning;
+        if (isAdvRunning) {
+            LOG_INF("Adv started");
+            btAdvStart();
+        } else {
+            LOG_INF("Adv stopped");
+            btAdvStop();
+            ledsSetState(LED_BLUE, 1);
+        }
+    }
 }
 
 static void timerCb(struct k_timer * timer)

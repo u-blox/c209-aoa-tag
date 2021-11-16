@@ -56,7 +56,7 @@ void buttonsInit(buttonHandlerCallback_t handler) {
         LOG_ERR("Error: didn't find %s device", BUTTON_SW2_PIN_PORT);
         return;
     }
-    
+
     int ret = gpio_pin_configure(button, BUTTON_SW2_PIN, GPIO_INPUT | GPIO_PULL_UP);
     if (ret != 0) {
         LOG_ERR("Error %d: failed to configure %s pin %d", ret, BUTTON_SW2_PIN_PORT, BUTTON_SW2_PIN);
@@ -74,7 +74,7 @@ void buttonsInit(buttonHandlerCallback_t handler) {
 static void buttonPressedIsr(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
 {
     uint32_t val;
-    gpio_pin_interrupt_configure(button, BUTTON_SW2_PIN, GPIO_INT_DISABLE);
+    gpio_remove_callback(button, &buttonCallbackData);
     val = gpio_pin_get(button, BUTTON_SW2_PIN);
     k_sem_give(&btnSem);
 }
@@ -101,13 +101,13 @@ static void handleButtonThread(void) {
         buttonCount++;
 
         btn_pressed_ms = k_uptime_delta(&btn_press_start_ms);
-        
+
         if (btn_pressed_ms < BTN_LONG_PRESS_LIMIT) {
             press_type = BUTTONS_SHORT_PRESS;
         } else {
             press_type = BUTTONS_LONG_PRESS;
         }
         callback(press_type);
-        gpio_pin_interrupt_configure(button, BUTTON_SW2_PIN, GPIO_INT_EDGE_TO_INACTIVE);
+        gpio_add_callback(button, &buttonCallbackData);
     }
 }

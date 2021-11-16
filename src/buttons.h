@@ -19,7 +19,7 @@
 
 #include <zephyr.h>
 
-/** 
+/**
  * @brief Type of button event
  */
 typedef enum buttonPressType_t {

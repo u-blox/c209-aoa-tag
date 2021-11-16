@@ -27,12 +27,14 @@
 #include <device.h>
 #include <drivers/sensor.h>
 #include <drivers/i2c.h>
-#include <power/power.h>
-#include <power/reboot.h>
+#include <pm/pm.h>
+#include <pm/device.h>
+#include <sys/reboot.h>
 #include "bt_util.h"
 #include "storage.h"
 #include "version_config.h"
 #include <logging/log.h>
+#include "bt_adv.h"
 
 LOG_MODULE_REGISTER(production, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
@@ -66,6 +68,7 @@ static void handleCommand(struct k_work *work);
 
 static void disableProdModeTimerCallback(struct k_timer *unused);
 void disableProductionMode(struct k_work *item);
+void restartUartRxAfterError(struct k_work *item);
 
 static uint8_t uartRxBuf[UART_RX_BUF_NUM][UART_RX_LEN];
 static uint8_t *pNextUartBuf = uartRxBuf[1];
@@ -73,7 +76,8 @@ static uint8_t *pNextUartBuf = uartRxBuf[1];
 static uint8_t atBuf[AT_MAX_CMD_LEN];
 static size_t atBufLen;
 static struct k_work handleCommandWork;
-static struct k_work genericWork;
+static struct k_work cancelProdWork;
+static struct k_work restartRxWork;
 
 static const struct device *pUartDev;
 
@@ -117,7 +121,7 @@ int productionStart(void)
         return -EFAULT;
     }
 
-    device_set_power_state(pUartDev, DEVICE_PM_ACTIVE_STATE, NULL, NULL);
+    pm_device_action_run(pUartDev, PM_DEVICE_ACTION_RESUME);
 
     err = uart_rx_enable(pUartDev, uartRxBuf[0], sizeof(uartRxBuf[0]), UART_RX_TIMEOUT);
     if (err) {
@@ -131,8 +135,12 @@ int productionStart(void)
 
     if (err == 0) {
         k_work_init(&handleCommandWork, handleCommand);
-        k_work_init(&genericWork, disableProductionMode);
+        k_work_init(&cancelProdWork, disableProductionMode);
+        k_work_init(&restartRxWork, restartUartRxAfterError);
         k_timer_start(&disableProdModeTimer, K_SECONDS(10), K_NO_WAIT);
+    } else {
+        LOG_ERR("uart_configure failed: %d", err);
+        return -EFAULT;
     }
 
 
@@ -142,13 +150,13 @@ int productionStart(void)
 void disableProductionMode(struct k_work *item)
 {
     int err;
-    printk("Exit production mode, disabling UART\n");
+    LOG_DBG("Exit production mode, disabling UART\n");
     err = uart_rx_disable(pUartDev);
     if (err) {
         LOG_ERR("disableProductionMode failed to stop rx, err: %d. Trying to disabe anyway.", err);
     }
     k_sleep(K_MSEC(100));
-    err = device_set_power_state(pUartDev, DEVICE_PM_OFF_STATE, NULL, NULL);
+    err = pm_device_action_run(pUartDev, PM_DEVICE_ACTION_SUSPEND);
     if (err) {
         LOG_ERR("Can't power off uart: %d", err);
     }
@@ -157,8 +165,19 @@ void disableProductionMode(struct k_work *item)
 static void disableProdModeTimerCallback(struct k_timer *unused)
 {
     // Cannot disable inside of an ISR
-    k_work_submit(&genericWork);
+    k_work_submit(&cancelProdWork);
 }
+
+void restartUartRxAfterError(struct k_work *item) {
+    LOG_INF("restartUartRxAfterError");
+    int err = 1;
+    err = uart_rx_enable(pUartDev, uartRxBuf[0], sizeof(uartRxBuf[0]), UART_RX_TIMEOUT);
+    if (err) {
+        LOG_ERR("UART RX failed: %d", err);
+    }
+    resetParser();
+}
+
 
 static void uartRxHandler(uint8_t character)
 {
@@ -201,7 +220,7 @@ static int validTxPowers(long txPower)
 }
 
 static void handleCommand(struct k_work *work)
-{    
+{
     int err;
     int commandLen;
     bool validCommand = true;
@@ -276,6 +295,34 @@ static void handleCommand(struct k_work *work)
             validCommand = false;
             sendString(ERROR_STR);
         }
+    } else if (strncmp("AT+ADVENABLE=", atBuf, 9) == 0 && commandLen > 9) {
+        errno = 0;
+        long enable = strtol(&atBuf[13], NULL, 10);
+        if (errno == 0) {
+            if (enable == 0) {
+                btAdvStop();
+                sendString(OK_STR);
+            } else if (enable == 1) {
+                btAdvStart();
+                sendString(OK_STR);
+            } else {
+                sendString(ERROR_STR);
+                validCommand = false;
+            }
+        } else {
+            sendString(ERROR_STR);
+        }
+
+    } else if (strncmp("AT+ADVINT=", atBuf, 9) == 0 && commandLen > 9) {
+        errno = 0;
+        long advInt = strtol(&atBuf[10], NULL, 10);
+        if (errno == 0) {
+            btAdvUpdateAdvInterval(advInt, advInt);
+            sendString(OK_STR);
+        } else {
+            sendString(ERROR_STR);
+        }
+
     } else {
         validCommand = false;
         sendString(ERROR_STR);
@@ -296,7 +343,7 @@ static void handleCommand(struct k_work *work)
         k_sleep(K_MSEC(5));
     }
 }
-
+static int uartErr = false;
 static void uartCallback(const struct device *dev, struct uart_event *evt, void *user_data)
 {
     int err;
@@ -326,9 +373,13 @@ static void uartCallback(const struct device *dev, struct uart_event *evt, void 
         pNextUartBuf = evt->data.rx_buf.buf;
         break;
     case UART_RX_STOPPED:
-        LOG_INF("RX_STOPPED (%d)", evt->data.rx_stop.reason);
+        uartErr = evt->data.rx_stop.reason;
         break;
     case UART_RX_DISABLED:
+        if (uartErr != 0) {
+            uartErr = 0;
+            k_work_submit(&restartRxWork);
+        }
         break;
     default:
         break;
@@ -446,7 +497,6 @@ static bool testApds(void)
         LOG_INF("APDS id: %d", id);
         return true;
     }
-    
 
     return false;
 }

@@ -17,7 +17,7 @@ Or if you aleady cloned normally:
 - Open the Toolchain Manager and download nRF Connect SDK 1.5.
 - After download click Open IDE.
 - In Segger Embedded Studio go to File -> open nRF connect SDK project.
-- Select the aoa_beacon root folder.
+- Select the cloned project folder (likely named `c209-aoa-tag` unless other was specified when cloning).
 - Select the ubx_evkninab4_nrf52833 inside `u-blox-sho-OpenCPU/zephyr` folder as the board config.
 
 - After SeS loaded the project you can build and flash.

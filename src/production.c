@@ -15,6 +15,7 @@
  */
 
 #include "buttons.h"
+#include "bt_adv.h"
 
 #include <zephyr.h>
 #include <device.h>
@@ -34,6 +35,7 @@
 #include "version_config.h"
 #include <logging/log.h>
 
+
 LOG_MODULE_REGISTER(production, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
 
@@ -51,6 +53,13 @@ LOG_MODULE_REGISTER(production, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 #define AT_MAX_CMD_LEN  100
 #define OK_STR          "\r\nOK\r\n"
 #define ERROR_STR       "\r\nERROR\r\n"
+
+#define GET_MAC_COMMAND "AT+UMLA=1"
+#define GET_MAC_COMMAND_LENGTH 9
+#define ID_COMMAND "AT+ID="
+#define ID_COMMAND_LENGTH 6
+#define ADV_COMMAND "AT+ADV="
+#define ADV_COMMAND_LENGTH 7
 
 K_THREAD_STACK_DEFINE(threadStack, THREAD_STACKSIZE);
 
@@ -74,6 +83,8 @@ static uint8_t atBuf[AT_MAX_CMD_LEN];
 static size_t atBufLen;
 static struct k_work handleCommandWork;
 static struct k_work genericWork;
+
+static uint16_t advIntervals[NUM_ADV_INTERVALS] = {20, 100, 1000};
 
 static const struct device *pUartDev;
 
@@ -131,8 +142,8 @@ int productionStart(void)
 
     if (err == 0) {
         k_work_init(&handleCommandWork, handleCommand);
-        k_work_init(&genericWork, disableProductionMode);
-        k_timer_start(&disableProdModeTimer, K_SECONDS(10), K_NO_WAIT);
+        //k_work_init(&genericWork, disableProductionMode);
+        //k_timer_start(&disableProdModeTimer, K_SECONDS(10), K_NO_WAIT);
     }
 
 
@@ -216,7 +227,7 @@ static void handleCommand(struct k_work *work)
         sprintf(outBuf, "\r\n\"%s\",\"%s\"\r\n", getGitSha(), getBuildTime());
         sendString(outBuf);
         sendString("OK\r\n");
-    } else if (strncmp("AT+UMLA=1", atBuf, 9) == 0 && commandLen == 9) {
+    } else if (strncmp(GET_MAC_COMMAND, atBuf, GET_MAC_COMMAND_LENGTH) == 0 && commandLen == GET_MAC_COMMAND_LENGTH) {
         bt_addr_le_t addr;
         char macHex[MAC_ADDR_LEN * 2 + 1];
         uint8_t macSwapped[MAC_ADDR_LEN];
@@ -276,14 +287,37 @@ static void handleCommand(struct k_work *work)
             validCommand = false;
             sendString(ERROR_STR);
         }
+    }  else if (strncmp( ADV_COMMAND, atBuf, 7) == 0 && commandLen > 7) {
+        errno = 0;
+        long advstate  = strtol(&atBuf[7], NULL, 10);
+        if (errno == 0 && (advstate == 0 || advstate ==1 )) {
+            if ( advstate == 0 ) {
+                btAdvStop();
+            } else {
+                btAdvStart();
+            }
+            sendString(OK_STR);
+        } else {
+            validCommand = false;
+            sendString(ERROR_STR);
+        }
+
+    } else if (strncmp(ID_COMMAND, atBuf, ID_COMMAND_LENGTH) == 0 && commandLen > ID_COMMAND_LENGTH) {
+
+        buttonsInit(&onButtonPressCb);
+
+        btAdvInit(advIntervals[advIntervalIndex], advIntervals[advIntervalIndex], atBuf+ID_COMMAND_LENGTH, atBuf+ID_COMMAND_LENGTH+EDDYSTONE_NAMESPACE_LENGTH+, txPower);
+        //btAdvStart();
+        sendString(OK_STR);
+
     } else {
         validCommand = false;
         sendString(ERROR_STR);
     }
 
-    if (validCommand) {
-        k_timer_stop(&disableProdModeTimer);
-    }
+    //if (validCommand) {
+    //    k_timer_stop(&disableProdModeTimer);
+    //}
 
     resetParser();
 

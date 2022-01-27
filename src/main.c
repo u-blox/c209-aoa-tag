@@ -79,12 +79,12 @@ void main(void)
 
     productionStart();
 
-    ledsInit();
+   /* ledsInit();
     ledsSetState(LED_RED, 1);
     ledsSetState(LED_GREEN, 1);
-    ledsSetState(LED_BLUE, 1);
+    ledsSetState(LED_BLUE, 1); */
 
-    buttonsInit(&onButtonPressCb);
+    // buttonsInit(&onButtonPressCb);
 
     __ASSERT(bt_enable(btReadyCb) == 0, "Bluetooth init failed");
     
@@ -121,9 +121,11 @@ static void btReadyCb(int err)
     storageGetTxPower(&txPower);
     LOG_INF("Setting TxPower: %d", txPower);
     setTxPower(BT_HCI_VS_LL_HANDLE_TYPE_ADV, 0, txPower);
-    
-    btAdvInit(advIntervals[advIntervalIndex], advIntervals[advIntervalIndex], pDefaultGroupNamespace, uuid, txPower);
-    btAdvStart();
+     
+ //   buttonsInit(&onButtonPressCb);
+
+ //   btAdvInit(advIntervals[advIntervalIndex], advIntervals[advIntervalIndex], pDefaultGroupNamespace, uuid, txPower);
+ //   btAdvStart();
 }
 
 static void onButtonPressCb(buttonPressType_t type) {

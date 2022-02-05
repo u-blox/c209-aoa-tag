@@ -125,7 +125,8 @@ static void btReadyCb(int err)
     setTxPower(BT_HCI_VS_LL_HANDLE_TYPE_ADV, 0, txPower);
      
     buttonsInit(&onButtonPressCb);
-
+    storageGetNameSpace(pDefaultGroupNamespace, sizeof(pDefaultGroupNamespace));
+    storageGetInstanceID(uuid, sizeof(uuid));
     btAdvInit(advIntervals[advIntervalIndex], advIntervals[advIntervalIndex], pDefaultGroupNamespace, uuid, txPower);
     btAdvStart();
 }

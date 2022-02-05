@@ -39,5 +39,31 @@ void storageWriteTxPower(int8_t power);
  * @param   power            pointer to store value in.
  */
 void storageGetTxPower(int8_t* pPower);
+/**
+ * @brief   Write namespace to nvs storage
+ *
+ * @param   power            Value to write
+ */
+void storageWriteNameSpace(uint8_t* namespace, int8_t length);
+
+/**
+ * @brief   Read namespace from nvs storage
+ *
+ * @param   power            pointer to store value in.
+ */
+void storageGetNameSpace(uint8_t* namespace, int8_t length);
+/**
+ * @brief   Write instance id to nvs storage
+ *
+ * @param   power            Value to write
+ */
+void storageWriteInstanceID(uint8_t* id, int8_t length);
+
+/**
+ * @brief   Read instance id from nvs storage
+ *
+ * @param   power            pointer to store value in.
+ */
+void storageGetInstanceID(uint8_t* id, int8_t length);
 
 #endif

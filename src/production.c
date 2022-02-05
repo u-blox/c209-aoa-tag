@@ -332,6 +332,8 @@ static void handleCommand(struct k_work *work)
           storageGetTxPower(&txPower);
           memcpy(pDefaultGroupNamespace, atBuf+ID_COMMAND_LENGTH, EDDYSTONE_NAMESPACE_LENGTH);
           memcpy(uuid, atBuf+ID_COMMAND_LENGTH+EDDYSTONE_NAMESPACE_LENGTH, EDDYSTONE_INSTANCE_ID_LEN);
+          storageWriteNameSpace(pDefaultGroupNamespace, EDDYSTONE_NAMESPACE_LENGTH);
+          storageWriteInstanceID(uuid,EDDYSTONE_INSTANCE_ID_LEN);
           btAdvInit(advIntervals[advIntervalIndex], advIntervals[advIntervalIndex], pDefaultGroupNamespace , uuid, txPower);
           //btAdvStart();
           sendString(OK_STR);

@@ -24,8 +24,12 @@
 LOG_MODULE_REGISTER(storage, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
 #define TX_POWER_NVS_ID     1
+#define NAMESPACE_NVS_ID     2
+#define INSTANCEID_NVS_ID     4
 
 #define DEFAULT_TX_POWER    ((int8_t)4)
+#define DEFAULT_NAMESPACE  "NINA-B4TAG"
+#define DEFAULT_INSTANCEID  "instae"
 
 static struct nvs_fs fs;
 
@@ -75,5 +79,53 @@ void storageGetTxPower(int8_t* pPower)
     nBytes = nvs_read(&fs, TX_POWER_NVS_ID, pPower, sizeof(int8_t));
     if (nBytes != sizeof(int8_t)) {
         *pPower = DEFAULT_TX_POWER;
+    }
+}
+
+void storageWriteNameSpace(uint8_t* namespace, int8_t length)
+{
+    int ret;
+    ret = nvs_write(&fs, NAMESPACE_NVS_ID,namespace, length);
+    __ASSERT(ret == length || ret == 0, "nvs_write failed for ID: %d err: %d", NAMESPACE_NVS_ID, ret);
+}
+
+/**
+ * @brief   Read namespace from nvs storage
+ *
+ * @param   power            pointer to store value in.
+ */
+void storageGetNameSpace(uint8_t* pNamespace, int8_t length)
+{
+    uint32_t nBytes;
+
+    nBytes = nvs_read(&fs, NAMESPACE_NVS_ID,pNamespace, length);
+    if (nBytes != length) {
+      memcpy(pNamespace,DEFAULT_NAMESPACE,length);
+    }
+}
+/**
+ * @brief   Write instance id to nvs storage
+ *
+ * @param   power            Value to write
+ */
+void storageWriteInstanceID(uint8_t* id, int8_t length)
+{
+    int ret;
+    ret = nvs_write(&fs,INSTANCEID_NVS_ID,id, length);
+    __ASSERT(ret == length || ret == 0, "nvs_write failed for ID: %d err: %d", INSTANCEID_NVS_ID, ret);
+}
+
+/**
+ * @brief   Read instance id from nvs storage
+ *
+ * @param   power            pointer to store value in.
+ */
+void storageGetInstanceID(uint8_t* pID, int8_t length)
+{
+    uint32_t nBytes;
+
+    nBytes = nvs_read(&fs, INSTANCEID_NVS_ID,pID, length);
+    if (nBytes != length) {
+      memcpy(pID,DEFAULT_INSTANCEID,length);
     }
 }

@@ -48,14 +48,16 @@ static void btReadyCb(int err);
 static void onButtonPressCb(buttonPressType_t type);
 static void setTxPower(uint8_t handleType, uint16_t handle, int8_t txPwrLvl);
 
-static bool isAdvRunning = true;
+bool isAdvRunning = true;
 static uint16_t advIntervals[NUM_ADV_INTERVALS] = {20, 100, 1000};
 static uint8_t advIntervalIndex = 0;
-static char* pDefaultGroupNamespace = "NINA-B4TAG";
+
+extern int8_t txPower ;
 
 struct k_timer blinkTimer;
 static uint8_t bluetoothReady;
-static uint8_t uuid[EDDYSTONE_INSTANCE_ID_LEN];
+uint8_t pDefaultGroupNamespace[EDDYSTONE_NAMESPACE_LENGTH] = "NINA-B4TAG";
+uint8_t uuid[EDDYSTONE_INSTANCE_ID_LEN];
 
 K_THREAD_DEFINE(blinkThreadId, BLINK_STACKSIZE, blink, NULL, NULL, NULL, BLINK_PRIORITY, 0, K_TICKS_FOREVER);
 
@@ -79,12 +81,12 @@ void main(void)
 
     productionStart();
 
-   /* ledsInit();
+    ledsInit();
     ledsSetState(LED_RED, 1);
     ledsSetState(LED_GREEN, 1);
-    ledsSetState(LED_BLUE, 1); */
+    ledsSetState(LED_BLUE, 1); 
 
-    // buttonsInit(&onButtonPressCb);
+     //buttonsInit(&onButtonPressCb);
 
     __ASSERT(bt_enable(btReadyCb) == 0, "Bluetooth init failed");
     
@@ -113,7 +115,7 @@ static void blink(void) {
 
 static void btReadyCb(int err)
 {
-    int8_t txPower = 0;
+    
     __ASSERT(err == 0, "Bluetooth init failed (err %d)", err);
     LOG_INF("Bluetooth initialized");
     bluetoothReady = 1;
@@ -122,10 +124,10 @@ static void btReadyCb(int err)
     LOG_INF("Setting TxPower: %d", txPower);
     setTxPower(BT_HCI_VS_LL_HANDLE_TYPE_ADV, 0, txPower);
      
- //   buttonsInit(&onButtonPressCb);
+    buttonsInit(&onButtonPressCb);
 
- //   btAdvInit(advIntervals[advIntervalIndex], advIntervals[advIntervalIndex], pDefaultGroupNamespace, uuid, txPower);
- //   btAdvStart();
+    btAdvInit(advIntervals[advIntervalIndex], advIntervals[advIntervalIndex], pDefaultGroupNamespace, uuid, txPower);
+    btAdvStart();
 }
 
 static void onButtonPressCb(buttonPressType_t type) {
@@ -152,7 +154,7 @@ static void onButtonPressCb(buttonPressType_t type) {
             } else {
                 LOG_INF("Adv stopped");
                 btAdvStop();
-                ledsSetState(LED_BLUE, 1);
+                ledsSetState(LED_BLUE, 0);
             }
         }
 }

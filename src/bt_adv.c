@@ -48,7 +48,7 @@ void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t* namespace, uint8_t* 
     minAdvInterval = min_int / 0.625;
     maxAdvInterval = max_int / 0.625;
 
-    memcpy((uint8_t*)&ad[2].data[ADV_DATA_OFFSET_NAMESPACE], namespace, EDDYSTONE_NAMESPACE_LENGFTH);
+    memcpy((uint8_t*)&ad[2].data[ADV_DATA_OFFSET_NAMESPACE], namespace, EDDYSTONE_NAMESPACE_LENGTH);
     memcpy((uint8_t*)&ad[2].data[ADV_DATA_OFFSET_INSTANCE], instance_id, EDDYSTONE_INSTANCE_ID_LEN);
     memcpy((uint8_t*)&ad[2].data[ADV_DATA_OFFSET_TX_POWER], &txPower, sizeof(txPower));
 }

@@ -1,0 +1,6 @@
+#!/bin/bash
+current=$(basename $(pwd))
+src_bin=$(find .. -type f -name zephyr.bin| grep -v $current)
+
+cp $src_bin .
+nrfutil pkg generate --hw-version 52 --sd-req 0x00 --application-version 0 --application zephyr.bin app.zip

@@ -16,6 +16,7 @@
 
 #include "buttons.h"
 #include "bt_adv.h"
+#include "leds.h"
 
 #include <zephyr.h>
 #include <device.h>
@@ -38,7 +39,7 @@
 
 LOG_MODULE_REGISTER(production, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
-
+#define NUM_ADV_INTERVALS       3
 #define THREAD_STACKSIZE       1024
 #define THREAD_PRIORITY        7
 
@@ -56,10 +57,13 @@ LOG_MODULE_REGISTER(production, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
 #define GET_MAC_COMMAND "AT+UMLA=1"
 #define GET_MAC_COMMAND_LENGTH 9
+#define GET_NAMESPACE_COMMAND "AT+GMM"
+#define GET_NAMESPACE_COMMAND_LENGTH 6
 #define ID_COMMAND "AT+ID="
 #define ID_COMMAND_LENGTH 6
 #define ADV_COMMAND "AT+ADV="
 #define ADV_COMMAND_LENGTH 7
+#define MIN_LED_ADV_IND_MS      20
 
 K_THREAD_STACK_DEFINE(threadStack, THREAD_STACKSIZE);
 
@@ -79,12 +83,18 @@ void disableProductionMode(struct k_work *item);
 static uint8_t uartRxBuf[UART_RX_BUF_NUM][UART_RX_LEN];
 static uint8_t *pNextUartBuf = uartRxBuf[1];
 
+extern bool isAdvRunning;
 static uint8_t atBuf[AT_MAX_CMD_LEN];
 static size_t atBufLen;
 static struct k_work handleCommandWork;
 static struct k_work genericWork;
+extern uint8_t pDefaultGroupNamespace[EDDYSTONE_NAMESPACE_LENGTH];
+extern uint8_t uuid[EDDYSTONE_INSTANCE_ID_LEN];
 
 static uint16_t advIntervals[NUM_ADV_INTERVALS] = {20, 100, 1000};
+static uint8_t advIntervalIndex = 0;
+extern struct k_timer blinkTimer;
+int8_t txPower = 0;
 
 static const struct device *pUartDev;
 
@@ -143,7 +153,7 @@ int productionStart(void)
     if (err == 0) {
         k_work_init(&handleCommandWork, handleCommand);
         //k_work_init(&genericWork, disableProductionMode);
-        //k_timer_start(&disableProdModeTimer, K_SECONDS(10), K_NO_WAIT);
+        // k_timer_start(&disableProdModeTimer, K_SECONDS(10), K_NO_WAIT);
     }
 
 
@@ -270,8 +280,9 @@ static void handleCommand(struct k_work *work)
         }
     } else if (strncmp("AT", atBuf, 2) == 0 && commandLen == 2) {
         sendString(OK_STR);
-    } else if (strncmp("AT+GMM", atBuf, 6) == 0 && commandLen == 6) {
-        sendString("\r\n\"NINA-B4-TAG\"\r\n");
+    } else if (strncmp(GET_NAMESPACE_COMMAND, atBuf, GET_NAMESPACE_COMMAND_LENGTH) == 0 && commandLen == GET_NAMESPACE_COMMAND_LENGTH ) {
+        sprintf(outBuf, "\r\n+namespace:%s\r\n", pDefaultGroupNamespace);
+        sendString(outBuf);
         sendString("OK\r\n");
     } else if (strncmp("AT+CPWROFF", atBuf, 10) == 0 && commandLen == 10) {
         sendString(OK_STR);
@@ -287,28 +298,46 @@ static void handleCommand(struct k_work *work)
             validCommand = false;
             sendString(ERROR_STR);
         }
-    }  else if (strncmp( ADV_COMMAND, atBuf, 7) == 0 && commandLen > 7) {
+    }  else if (strncmp( ADV_COMMAND, atBuf, ADV_COMMAND_LENGTH) == 0 && commandLen > ADV_COMMAND_LENGTH) {
         errno = 0;
-        long advstate  = strtol(&atBuf[7], NULL, 10);
+        long advstate  = strtol(&atBuf[ADV_COMMAND_LENGTH], NULL, 10);
         if (errno == 0 && (advstate == 0 || advstate ==1 )) {
             if ( advstate == 0 ) {
-                btAdvStop();
+                if(isAdvRunning== true){
+                btAdvStop();                
+                ledsSetState(LED_BLUE, 0);
+                k_sleep(K_MSEC(MIN_LED_ADV_IND_MS));
+                ledsSetState(LED_BLUE, 1);
+                k_timer_start(&blinkTimer, K_MSEC(advIntervals[advIntervalIndex]), K_NO_WAIT);
+                isAdvRunning=false;
+              } else {
+                  sendString(ERROR_STR);
+              }
             } else {
                 btAdvStart();
+                isAdvRunning=true;
             }
+            //CONFID-NAV
+            //434f4e4649442d4e4156
+            //AT+UDFFILT=1,2,"434f4e4649442d4e4156"\r
             sendString(OK_STR);
         } else {
             validCommand = false;
             sendString(ERROR_STR);
         }
 
-    } else if (strncmp(ID_COMMAND, atBuf, ID_COMMAND_LENGTH) == 0 && commandLen > ID_COMMAND_LENGTH) {
+    } else if (strncmp(ID_COMMAND, atBuf, ID_COMMAND_LENGTH) == 0 && commandLen == ID_COMMAND_LENGTH+EDDYSTONE_NAMESPACE_LENGTH+EDDYSTONE_INSTANCE_ID_LEN) {
 
-        buttonsInit(&onButtonPressCb);
-
-        btAdvInit(advIntervals[advIntervalIndex], advIntervals[advIntervalIndex], atBuf+ID_COMMAND_LENGTH, atBuf+ID_COMMAND_LENGTH+EDDYSTONE_NAMESPACE_LENGTH+, txPower);
-        //btAdvStart();
-        sendString(OK_STR);
+        if(isAdvRunning==false){
+          storageGetTxPower(&txPower);
+          memcpy(pDefaultGroupNamespace, atBuf+ID_COMMAND_LENGTH, EDDYSTONE_NAMESPACE_LENGTH);
+          memcpy(uuid, atBuf+ID_COMMAND_LENGTH+EDDYSTONE_NAMESPACE_LENGTH, EDDYSTONE_INSTANCE_ID_LEN);
+          btAdvInit(advIntervals[advIntervalIndex], advIntervals[advIntervalIndex], pDefaultGroupNamespace , uuid, txPower);
+          //btAdvStart();
+          sendString(OK_STR);
+        } else {
+           sendString("\r\nAdvertising\r\n");
+        }
 
     } else {
         validCommand = false;

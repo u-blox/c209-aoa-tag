@@ -20,7 +20,7 @@
 #include <zephyr.h>
 
 #define EDDYSTONE_INSTANCE_ID_LEN   6
-#define EDDYSTONE_NAMESPACE_LENGFTH 10
+#define EDDYSTONE_NAMESPACE_LENGTH 10
 
 /**
  * @brief   Init BT advertising

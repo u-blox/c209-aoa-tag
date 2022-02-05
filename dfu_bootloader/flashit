@@ -1,0 +1,3 @@
+#!/bin/bash
+tty=$(ls /dev/tty.usbserial-DK*)
+nrfutil dfu serial -pkg app.zip -p $tty -b 115200 -fc 1

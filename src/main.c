@@ -155,7 +155,7 @@ static void onButtonPressCb(buttonPressType_t type) {
             } else {
                 LOG_INF("Adv stopped");
                 btAdvStop();
-                ledsSetState(LED_BLUE, 0);
+                ledsSetState(LED_BLUE, 1);
             }
         }
 }

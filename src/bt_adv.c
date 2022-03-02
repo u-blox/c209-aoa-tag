@@ -45,6 +45,9 @@ static struct bt_data ad[] = {
 };
 
 void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t* namespace, uint8_t* instance_id, int8_t txPower) {
+    if( min_int == max_int){
+      max_int++;
+    }
     minAdvInterval = min_int / 0.625;
     maxAdvInterval = max_int / 0.625;
 
@@ -67,9 +70,12 @@ void btAdvStop(void) {
     LOG_INF("Adv stopped");
 }
 
-void btAdvUpdateAdvInterval(uint16_t min, uint16_t max) {
-    minAdvInterval = min / 0.625;
-    maxAdvInterval = max / 0.625;
+void btAdvUpdateAdvInterval(uint16_t min_int, uint16_t max_int) {
+    if( min_int == max_int){
+      max_int++;
+    }
+    minAdvInterval = min_int / 0.625;
+    maxAdvInterval = max_int / 0.625;
     int err = bt_le_adv_stop();
     if (err) {
         LOG_ERR("Failed stopping adv when changing adv interval: %d", err);

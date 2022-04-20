@@ -78,6 +78,7 @@ static size_t atBufLen;
 static struct k_work handleCommandWork;
 static struct k_work cancelProdWork;
 static struct k_work restartRxWork;
+static int uartErr = false;
 
 static const struct device *pUartDev;
 
@@ -343,7 +344,7 @@ static void handleCommand(struct k_work *work)
         k_sleep(K_MSEC(5));
     }
 }
-static int uartErr = false;
+
 static void uartCallback(const struct device *dev, struct uart_event *evt, void *user_data)
 {
     int err;

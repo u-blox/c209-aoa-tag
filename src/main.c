@@ -49,7 +49,7 @@ static void onButtonPressCb(buttonPressType_t type);
 static void setTxPower(uint8_t handleType, uint16_t handle, int8_t txPwrLvl);
 
 static bool isAdvRunning = true;
-static uint16_t advIntervals[NUM_ADV_INTERVALS] = {20, 100, 1000};
+static uint16_t advIntervals[NUM_ADV_INTERVALS] = {50, 100, 1000};
 static uint8_t advIntervalIndex = 0;
 static char* pDefaultGroupNamespace = "NINA-B4TAG";
 

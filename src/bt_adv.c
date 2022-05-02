@@ -38,38 +38,38 @@ LOG_MODULE_REGISTER(bt_adv_aoa, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 #define PER_ADV_DATA_LEN 200
 
 static void adv_sent_cb(struct bt_le_ext_adv *adv,
-			struct bt_le_ext_adv_sent_info *info);
+            struct bt_le_ext_adv_sent_info *info);
 
 static struct bt_le_ext_adv_cb adv_callbacks = {
-	.sent = adv_sent_cb,
+    .sent = adv_sent_cb,
 };
 
 static struct bt_le_ext_adv *adv_set;
 
 static struct bt_le_adv_param param =
-		BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_EXT_ADV |
-				     BT_LE_ADV_OPT_USE_NAME | BT_LE_ADV_OPT_NO_2M,
-				     BT_GAP_ADV_FAST_INT_MIN_2,
-				     BT_GAP_ADV_FAST_INT_MAX_2,
-				     NULL);
+        BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_EXT_ADV |
+                     BT_LE_ADV_OPT_USE_NAME | BT_LE_ADV_OPT_NO_2M,
+                     BT_GAP_ADV_FAST_INT_MIN_2,
+                     BT_GAP_ADV_FAST_INT_MAX_2,
+                     NULL);
 
 static struct bt_le_ext_adv_start_param ext_adv_start_param = {
-	.timeout = 0,
-	.num_events = 0,
+    .timeout = 0,
+    .num_events = 0,
 };
 
 struct bt_df_adv_cte_tx_param cte_params = { .cte_len = CTE_LEN,
-					     .cte_count = PER_ADV_EVENT_CTE_COUNT,
-					     .cte_type = BT_DF_CTE_TYPE_AOA,
-					     .num_ant_ids = 0,
-					     .ant_ids = NULL
+                         .cte_count = PER_ADV_EVENT_CTE_COUNT,
+                         .cte_type = BT_DF_CTE_TYPE_AOA,
+                         .num_ant_ids = 0,
+                         .ant_ids = NULL
 };
 
 static void adv_sent_cb(struct bt_le_ext_adv *adv,
-			struct bt_le_ext_adv_sent_info *info)
+            struct bt_le_ext_adv_sent_info *info)
 {
-	LOG_INF("Advertiser[%d] %p sent %d\n", bt_le_ext_adv_get_index(adv),
-	       (void*)adv, info->num_sent);
+    LOG_INF("Advertiser[%d] %p sent %d\n", bt_le_ext_adv_get_index(adv),
+           (void*)adv, info->num_sent);
 }
 
 static uint16_t minAdvInterval;
@@ -108,18 +108,18 @@ void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t* namespace, uint8_t* 
     memcpy((uint8_t*)&ad[2].data[ADV_DATA_OFFSET_TX_POWER], &txPower, sizeof(txPower));
     memset(per_ad_data, 0, sizeof(per_ad_data));
 
-	// Just send some dummy data for now, this can be any customer data
-	// later and may also include som u-blox reserved parts for sensors etc.
+    // Just send some dummy data for now, this can be any customer data
+    // later and may also include som u-blox reserved parts for sensors etc.
     for (int i = 0; i < sizeof(per_ad_data); i++) {
         per_ad_data[i] = 'A' + (i % ('Z' - 'A'));
     }
 
-	int err = bt_le_ext_adv_create(&param, &adv_callbacks, &adv_set);
-	if (err) {
-		LOG_ERR("failed (err %d)\n", err);
-		return;
-	}
-	LOG_INF("success\n");
+    int err = bt_le_ext_adv_create(&param, &adv_callbacks, &adv_set);
+    if (err) {
+        LOG_ERR("failed (err %d)\n", err);
+        return;
+    }
+    LOG_INF("success\n");
 
     LOG_INF("Set ext adv data...");
     err = bt_le_ext_adv_set_data(adv_set, ad, ARRAY_SIZE(ad), NULL, 0);
@@ -128,28 +128,28 @@ void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t* namespace, uint8_t* 
     }
     LOG_INF("success\n");
 
-	LOG_INF("Update CTE params...");
-	err = bt_df_set_adv_cte_tx_param(adv_set, &cte_params);
-	if (err) {
-		LOG_ERR("failed (err %d)\n", err);
-		return;
-	}
-	LOG_INF("success\n");
+    LOG_INF("Update CTE params...");
+    err = bt_df_set_adv_cte_tx_param(adv_set, &cte_params);
+    if (err) {
+        LOG_ERR("failed (err %d)\n", err);
+        return;
+    }
+    LOG_INF("success\n");
 
-	LOG_INF("Periodic advertising params set...");
-	struct bt_le_per_adv_param per_adv_param = {
-		.interval_min = minAdvInterval,
-		.interval_max = maxAdvInterval,
-		.options = BT_LE_ADV_OPT_USE_TX_POWER | BT_LE_ADV_OPT_NO_2M,
-	};
-	err = bt_le_per_adv_set_param(adv_set, &per_adv_param);
-	if (err) {
-		LOG_ERR("failed (err %d)\n", err);
-		return;
-	}
-	LOG_INF("success\n");
+    LOG_INF("Periodic advertising params set...");
+    struct bt_le_per_adv_param per_adv_param = {
+        .interval_min = minAdvInterval,
+        .interval_max = maxAdvInterval,
+        .options = BT_LE_ADV_OPT_USE_TX_POWER | BT_LE_ADV_OPT_NO_2M,
+    };
+    err = bt_le_per_adv_set_param(adv_set, &per_adv_param);
+    if (err) {
+        LOG_ERR("failed (err %d)\n", err);
+        return;
+    }
+    LOG_INF("success\n");
 
-	LOG_INF("Set per adv data...");
+    LOG_INF("Set per adv data...");
     err = bt_le_per_adv_set_data(adv_set, per_ad, ARRAY_SIZE(per_ad));
     if (err) {
         LOG_ERR("failed (err %d)\n", err);
@@ -157,36 +157,36 @@ void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t* namespace, uint8_t* 
     }
     LOG_INF("success\n");
 
-	LOG_INF("Enable CTE...");
-	err = bt_df_adv_cte_tx_enable(adv_set);
-	if (err) {
-		LOG_ERR("failed (err %d)\n", err);
-		return;
-	}
-	LOG_INF("success\n");
+    LOG_INF("Enable CTE...");
+    err = bt_df_adv_cte_tx_enable(adv_set);
+    if (err) {
+        LOG_ERR("failed (err %d)\n", err);
+        return;
+    }
+    LOG_INF("success\n");
 }
 
 void btAdvStart(void) {
-	LOG_INF("Periodic advertising enable...");
-	int err = bt_le_per_adv_start(adv_set);
-	if (err) {
-		LOG_ERR("failed (err %d)\n", err);
-		return;
-	}
-	LOG_INF("success\n");
+    LOG_INF("Periodic advertising enable...");
+    int err = bt_le_per_adv_start(adv_set);
+    if (err) {
+        LOG_ERR("failed (err %d)\n", err);
+        return;
+    }
+    LOG_INF("success\n");
 
-	LOG_INF("Extended advertising enable...");
-	err = bt_le_ext_adv_start(adv_set, &ext_adv_start_param);
-	if (err) {
-		LOG_ERR("failed (err %d)\n", err);
-		return;
-	}
-	LOG_INF("success\n");
+    LOG_INF("Extended advertising enable...");
+    err = bt_le_ext_adv_start(adv_set, &ext_adv_start_param);
+    if (err) {
+        LOG_ERR("failed (err %d)\n", err);
+        return;
+    }
+    LOG_INF("success\n");
 }
 
 void btAdvStop(void) {
-	bt_le_per_adv_stop(adv_set);
-	bt_le_ext_adv_stop(adv_set);
+    bt_le_per_adv_stop(adv_set);
+    bt_le_ext_adv_stop(adv_set);
     LOG_INF("Adv stopped");
 }
 
@@ -194,16 +194,16 @@ void btAdvUpdateAdvInterval(uint16_t min, uint16_t max) {
     minAdvInterval = min / 1.25;
     maxAdvInterval = max / 1.25;
     btAdvStop();
-	struct bt_le_per_adv_param per_adv_param = {
-		.interval_min = minAdvInterval,
-		.interval_max = maxAdvInterval,
-		.options = BT_LE_ADV_OPT_USE_TX_POWER | BT_LE_ADV_OPT_NO_2M,
-	};
-	int err = bt_le_per_adv_set_param(adv_set, &per_adv_param);
-	if (err) {
-		LOG_ERR("failed (err %d)\n", err);
-		return;
-	}
-	LOG_INF("success\n");
+    struct bt_le_per_adv_param per_adv_param = {
+        .interval_min = minAdvInterval,
+        .interval_max = maxAdvInterval,
+        .options = BT_LE_ADV_OPT_USE_TX_POWER | BT_LE_ADV_OPT_NO_2M,
+    };
+    int err = bt_le_per_adv_set_param(adv_set, &per_adv_param);
+    if (err) {
+        LOG_ERR("failed (err %d)\n", err);
+        return;
+    }
+    LOG_INF("success\n");
     btAdvStart();
 }

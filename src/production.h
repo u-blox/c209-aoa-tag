@@ -17,6 +17,7 @@
 #ifndef __PRODUCTION_H
 #define __PRODUCTION_H
 
+typedef void (*atOutput)(char* str);
 
 /**
  * @brief   Init the test and configuration UART interface.
@@ -25,5 +26,6 @@
  *          Once a valid AT command is sent the module, it will stay in test/configuration mode until reset, no 10 seconds limit.
  */
 int productionStart(void);
+bool productionHandleCommand(uint8_t* inAtBuf, uint32_t commandLen, atOutput output);
 
 #endif

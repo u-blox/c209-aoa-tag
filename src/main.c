@@ -35,6 +35,9 @@
 #include "storage.h"
 #include <logging/log.h>
 
+#include <bluetooth/services/nus.h>
+
+
 LOG_MODULE_REGISTER(app, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
 #define BLINK_STACKSIZE         1024
@@ -48,6 +51,16 @@ static void btReadyCb(int err);
 static void onButtonPressCb(buttonPressType_t type);
 static void setTxPower(uint8_t handleType, uint16_t handle, int8_t txPwrLvl);
 
+static void connected(struct bt_conn *conn, uint8_t err);
+static void disconnected(struct bt_conn *conn, uint8_t reason);
+static void nus_send_data(char* data);
+static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data, uint16_t len);
+
+BT_CONN_CB_DEFINE(conn_callbacks) = {
+    .connected    = connected,
+    .disconnected = disconnected,
+};
+
 static bool isAdvRunning = true;
 static uint16_t advIntervals[NUM_ADV_INTERVALS] = {50, 100, 1000};
 static uint8_t advIntervalIndex = 0;
@@ -57,7 +70,16 @@ struct k_timer blinkTimer;
 static uint8_t bluetoothReady;
 static uint8_t uuid[EDDYSTONE_INSTANCE_ID_LEN];
 
+static struct bt_conn *current_conn;
+static uint32_t nus_max_send_len;
+
+static struct bt_nus_cb nus_cb = {
+    .received = bt_receive_cb,
+};
+
+
 K_THREAD_DEFINE(blinkThreadId, BLINK_STACKSIZE, blink, NULL, NULL, NULL, BLINK_PRIORITY, 0, K_TICKS_FOREVER);
+
 
 void main(void)
 {
@@ -87,6 +109,12 @@ void main(void)
     buttonsInit(&onButtonPressCb);
 
     __ASSERT(bt_enable(btReadyCb) == 0, "Bluetooth init failed");
+
+    int err = bt_nus_init(&nus_cb);
+    if (err) {
+        LOG_ERR("Failed to initialize UART service (err: %d)", err);
+        return;
+    }
 
     k_timer_init(&blinkTimer, timerCb, NULL);
     k_timer_start(&blinkTimer, K_MSEC(advIntervals[advIntervalIndex]), K_NO_WAIT);
@@ -190,4 +218,51 @@ static void setTxPower(uint8_t handleType, uint16_t handle, int8_t txPwrLvl)
     LOG_INF("Set Tx Power: %d", rp->selected_tx_power);
 
     net_buf_unref(rsp);
+}
+
+static void connected(struct bt_conn *conn, uint8_t err)
+{
+    char addr[BT_ADDR_LE_STR_LEN];
+
+    if (err) {
+        LOG_ERR("Connection failed (err %u)", err);
+        return;
+    }
+    current_conn = bt_conn_ref(conn);;
+    nus_max_send_len = 20;
+
+    bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+    LOG_INF("Connected %s", log_strdup(addr));
+}
+
+static void disconnected(struct bt_conn *conn, uint8_t reason)
+{
+    char addr[BT_ADDR_LE_STR_LEN];
+
+    bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
+
+    LOG_INF("Disconnected: %s (reason %u)", log_strdup(addr), reason);
+
+    if (current_conn) {
+        bt_conn_unref(current_conn);
+    }
+}
+
+static void nus_send_data(char* data)
+{
+    int err = bt_nus_send(current_conn, (uint8_t*)data, strlen(data));
+    if (err) {
+        LOG_WRN("Failed to send data over BLE connection, err: %d", err);
+    }
+}
+
+static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data, uint16_t len)
+{
+    char addr[BT_ADDR_LE_STR_LEN] = {0};
+
+    bt_addr_le_to_str(bt_conn_get_dst(conn), addr, ARRAY_SIZE(addr));
+
+    LOG_INF("Received data from: %s", log_strdup(addr));
+
+    productionHandleCommand(data, len, nus_send_data);
 }

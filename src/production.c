@@ -35,6 +35,10 @@
 #include "version_config.h"
 #include <logging/log.h>
 #include "bt_adv.h"
+#include "production.h"
+
+#include <bluetooth/services/nus.h>
+#define STACKSIZE CONFIG_BT_NUS_THREAD_STACK_SIZE
 
 LOG_MODULE_REGISTER(production, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
@@ -56,7 +60,7 @@ LOG_MODULE_REGISTER(production, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
 K_THREAD_STACK_DEFINE(threadStack, THREAD_STACKSIZE);
 
-static void resetParser(void);
+static void resetUartAtBuffer(void);
 static void sendString(char* str);
 
 static bool testLis2dw(void);
@@ -64,7 +68,7 @@ static bool testBme280(void);
 static bool testApds(void);
 
 static void uartCallback(const struct device *dev, struct uart_event *evt, void *user_data);
-static void handleCommand(struct k_work *work);
+static void doCommandWork(struct k_work *work);
 
 static void disableProdModeTimerCallback(struct k_timer *unused);
 void disableProductionMode(struct k_work *item);
@@ -130,12 +134,12 @@ int productionStart(void)
         return -EFAULT;
     }
 
-    resetParser();
+    resetUartAtBuffer();
 
     err = uart_configure(pUartDev, &uart_cfg);
 
     if (err == 0) {
-        k_work_init(&handleCommandWork, handleCommand);
+        k_work_init(&handleCommandWork, doCommandWork);
         k_work_init(&cancelProdWork, disableProductionMode);
         k_work_init(&restartRxWork, restartUartRxAfterError);
         k_timer_start(&disableProdModeTimer, K_SECONDS(10), K_NO_WAIT);
@@ -176,7 +180,7 @@ void restartUartRxAfterError(struct k_work *item) {
     if (err) {
         LOG_ERR("UART RX failed: %d", err);
     }
-    resetParser();
+    resetUartAtBuffer();
 }
 
 
@@ -220,23 +224,17 @@ static int validTxPowers(long txPower)
     return error;
 }
 
-static void handleCommand(struct k_work *work)
+bool productionHandleCommand(uint8_t* inAtBuf, uint32_t commandLen, atOutput outputRsp)
 {
-    int err;
-    int commandLen;
     bool validCommand = true;
     char outBuf[100];
     memset(outBuf, 0, sizeof(outBuf));
 
-    atBuf[MIN(atBufLen, AT_MAX_CMD_LEN - 1)] = 0;
-    commandLen = strlen(atBuf);
-
-
-    if (strncmp("ATI9", atBuf, 4) == 0 && commandLen == 4) {
+    if (strncmp("ATI9", inAtBuf, 4) == 0 && commandLen == 4) {
         sprintf(outBuf, "\r\n\"%s\",\"%s\"\r\n", getGitSha(), getBuildTime());
-        sendString(outBuf);
-        sendString("OK\r\n");
-    } else if (strncmp("AT+UMLA=1", atBuf, 9) == 0 && commandLen == 9) {
+        outputRsp(outBuf);
+        outputRsp("OK\r\n");
+    } else if (strncmp("AT+UMLA=1", inAtBuf, 9) == 0 && commandLen == 9) {
         bt_addr_le_t addr;
         char macHex[MAC_ADDR_LEN * 2 + 1];
         uint8_t macSwapped[MAC_ADDR_LEN];
@@ -255,85 +253,99 @@ static void handleCommand(struct k_work *work)
         bin2hex(macSwapped, MAC_ADDR_LEN, macHex, MAC_ADDR_LEN * 2);
         utilToupper(macHex);
         sprintf(outBuf, "\r\n+UMLA:%s\r\n", macHex);
-        sendString(outBuf);
-        sendString("OK\r\n");
-    } else if (strncmp("AT+TEST", atBuf, 7) == 0 && commandLen == 7) {
+        outputRsp(outBuf);
+        outputRsp("OK\r\n");
+    } else if (strncmp("AT+TEST", inAtBuf, 7) == 0 && commandLen == 7) {
         bool ok = true;
         if (!testLis2dw()) {
             ok = false;
-            sendString("\r\nLIS_ERROR\r\n");
+            outputRsp("\r\nLIS_ERROR\r\n");
         }
         if (!testBme280()) {
             ok = false;
-            sendString("\r\nBME_ERROR\r\n");
+            outputRsp("\r\nBME_ERROR\r\n");
         }
         if (!testApds()) {
             ok = false;
-            sendString("\r\nAPDS_ERROR\r\n");
+            outputRsp("\r\nAPDS_ERROR\r\n");
         }
 
         if (ok) {
-            sendString(OK_STR);
+            outputRsp(OK_STR);
         } else {
-            sendString(ERROR_STR);
+            outputRsp(ERROR_STR);
         }
-    } else if (strncmp("AT", atBuf, 2) == 0 && commandLen == 2) {
-        sendString(OK_STR);
-    } else if (strncmp("AT+GMM", atBuf, 6) == 0 && commandLen == 6) {
-        sendString("\r\n\"NINA-B4-TAG\"\r\n");
-        sendString("OK\r\n");
-    } else if (strncmp("AT+CPWROFF", atBuf, 10) == 0 && commandLen == 10) {
-        sendString(OK_STR);
+    } else if (strncmp("AT", inAtBuf, 2) == 0 && commandLen == 2) {
+        outputRsp(OK_STR);
+    } else if (strncmp("AT+GMM", inAtBuf, 6) == 0 && commandLen == 6) {
+        outputRsp("\r\n\"NINA-B4-TAG\"\r\n");
+        outputRsp("OK\r\n");
+    } else if (strncmp("AT+CPWROFF", inAtBuf, 10) == 0 && commandLen == 10) {
+        outputRsp(OK_STR);
         k_sleep(K_MSEC(200));
         sys_reboot(SYS_REBOOT_COLD);
-    } else if (strncmp("AT+TXPWR=", atBuf, 9) == 0 && commandLen > 9) {
+    } else if (strncmp("AT+TXPWR=", inAtBuf, 9) == 0 && commandLen > 9) {
         errno = 0;
-        long power = strtol(&atBuf[9], NULL, 10);
+        long power = strtol(&inAtBuf[9], NULL, 10);
         if (errno == 0 && validTxPowers(power) == 0) {
             storageWriteTxPower(power);
-            sendString(OK_STR);
+            outputRsp(OK_STR);
         } else {
             validCommand = false;
-            sendString(ERROR_STR);
+            outputRsp(ERROR_STR);
         }
-    } else if (strncmp("AT+ADVENABLE=", atBuf, 9) == 0 && commandLen > 9) {
+    } else if (strncmp("AT+ADVENABLE=", inAtBuf, 9) == 0 && commandLen > 9) {
         errno = 0;
-        long enable = strtol(&atBuf[13], NULL, 10);
+        long enable = strtol(&inAtBuf[13], NULL, 10);
         if (errno == 0) {
             if (enable == 0) {
                 btAdvStop();
-                sendString(OK_STR);
+                outputRsp(OK_STR);
             } else if (enable == 1) {
                 btAdvStart();
-                sendString(OK_STR);
+                outputRsp(OK_STR);
             } else {
-                sendString(ERROR_STR);
+                outputRsp(ERROR_STR);
                 validCommand = false;
             }
         } else {
-            sendString(ERROR_STR);
+            outputRsp(ERROR_STR);
         }
 
-    } else if (strncmp("AT+ADVINT=", atBuf, 9) == 0 && commandLen > 9) {
+    } else if (strncmp("AT+ADVINT=", inAtBuf, 9) == 0 && commandLen > 9) {
         errno = 0;
-        long advInt = strtol(&atBuf[10], NULL, 10);
+        long advInt = strtol(&inAtBuf[10], NULL, 10);
         if (errno == 0) {
             btAdvUpdateAdvInterval(advInt, advInt);
-            sendString(OK_STR);
+            outputRsp(OK_STR);
         } else {
-            sendString(ERROR_STR);
+            outputRsp(ERROR_STR);
         }
 
     } else {
         validCommand = false;
-        sendString(ERROR_STR);
+        outputRsp(ERROR_STR);
     }
+
+    return validCommand;
+}
+
+static void doCommandWork(struct k_work *work)
+{
+    int err;
+    int commandLen;
+    bool validCommand = true;
+
+    atBuf[MIN(atBufLen, AT_MAX_CMD_LEN - 1)] = 0;
+    commandLen = strlen(atBuf);
+
+    validCommand = productionHandleCommand(atBuf, commandLen, sendString);
 
     if (validCommand) {
         k_timer_stop(&disableProdModeTimer);
     }
 
-    resetParser();
+    resetUartAtBuffer();
 
     err = 1;
     while (err) {
@@ -387,7 +399,7 @@ static void uartCallback(const struct device *dev, struct uart_event *evt, void 
     }
 }
 
-static void resetParser(void)
+static void resetUartAtBuffer(void)
 {
     memset(atBuf, 0, sizeof(atBuf));
     atBufLen = 0;

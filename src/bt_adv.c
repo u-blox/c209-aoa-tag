@@ -40,15 +40,12 @@ LOG_MODULE_REGISTER(bt_adv_aoa, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 #define PER_ADV_DATA_LEN 200
 
 static void adv_sent_cb(struct bt_le_ext_adv *adv, struct bt_le_ext_adv_sent_info *info);
-void adv_set_got_connection(struct bt_le_ext_adv *adv, struct bt_le_ext_adv_connected_info *info);
 
 static struct bt_le_ext_adv_cb adv_callbacks = {
     .sent = adv_sent_cb,
-    .connected = adv_set_got_connection,
 };
 
 static struct bt_le_ext_adv *adv_set;
-static struct bt_le_ext_adv *adv_set_nus;
 
 static struct bt_le_adv_param param =
         BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_EXT_ADV |
@@ -58,8 +55,7 @@ static struct bt_le_adv_param param =
                      NULL);
 
 static struct bt_le_adv_param param_nus =
-        BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_EXT_ADV |
-                     BT_LE_ADV_OPT_USE_NAME | BT_LE_ADV_OPT_CONNECTABLE | BT_LE_ADV_OPT_NO_2M,
+        BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_USE_NAME | BT_LE_ADV_OPT_CONNECTABLE,
                      BT_GAP_ADV_FAST_INT_MIN_2,
                      BT_GAP_ADV_FAST_INT_MAX_2,
                      NULL);
@@ -81,17 +77,6 @@ static void adv_sent_cb(struct bt_le_ext_adv *adv,
 {
     LOG_INF("Advertiser[%d] %p sent %d\n", bt_le_ext_adv_get_index(adv),
            (void*)adv, info->num_sent);
-}
-
-void adv_set_got_connection(struct bt_le_ext_adv *adv, struct bt_le_ext_adv_connected_info *info)
-{
-    LOG_INF("Extended advertising NUS enable...");
-    int err = bt_le_ext_adv_start(adv_set_nus, &ext_adv_start_param);
-    if (err) {
-        LOG_ERR("failed (err %d)\n", err);
-        return;
-    }
-    LOG_INF("success\n");
 }
 
 static uint16_t minAdvInterval;
@@ -123,9 +108,6 @@ static struct bt_data per_ad[] = {
 
 static const struct bt_data ad_nus[] = {
     BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
-};
-
-static const struct bt_data sd_nus[] = {
     BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_UUID_NUS_VAL),
 };
 
@@ -151,24 +133,10 @@ void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t* namespace, uint8_t* 
     }
     LOG_INF("success\n");
 
-    err = bt_le_ext_adv_create(&param_nus, &adv_callbacks, &adv_set_nus);
-    if (err) {
-        LOG_ERR("failed (err %d)\n", err);
-        return;
-    }
-    LOG_INF("success\n");
-
     LOG_INF("Set ext adv data...");
     err = bt_le_ext_adv_set_data(adv_set, ad, ARRAY_SIZE(ad), NULL, 0);
     if (err) {
         LOG_ERR("Failed setting ext adv data: %d\n", err);
-    }
-    LOG_INF("success\n");
-
-    LOG_INF("Set ext adv data NUS...");
-    err = bt_le_ext_adv_set_data(adv_set_nus, ad_nus, ARRAY_SIZE(ad_nus), sd_nus, ARRAY_SIZE(sd_nus));
-    if (err) {
-        LOG_ERR("Failed setting NUS ext adv data: %d\n", err);
     }
     LOG_INF("success\n");
 
@@ -209,12 +177,13 @@ void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t* namespace, uint8_t* 
     }
     LOG_INF("success\n");
 
-    LOG_INF("Extended advertising NUS enable...");
-    err = bt_le_ext_adv_start(adv_set_nus, &ext_adv_start_param);
-    if (err) {
-        LOG_ERR("failed (err %d)\n", err);
-        return;
-    }
+    LOG_INF("Legacy advertising NUS enable...");
+	err = bt_le_adv_start(&param_nus, ad_nus, ARRAY_SIZE(ad_nus),
+			      NULL, 0);
+	if (err) {
+		printk("Advertising failed to start (err %d)\n", err);
+		return;
+	}
     LOG_INF("success\n");
 }
 

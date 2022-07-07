@@ -40,13 +40,9 @@
 
 LOG_MODULE_REGISTER(app, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
-#define BLINK_STACKSIZE         1024
-#define BLINK_PRIORITY          7
-#define MIN_LED_ADV_IND_MS      20
+#define LED_BLINK_INTERVAL_MS   150
 #define NUM_ADV_INTERVALS       3
 
-static void blink(void);
-static void timerCb(struct k_timer * timer);
 static void btReadyCb(int err);
 static void onButtonPressCb(buttonPressType_t type);
 static void setTxPower(uint8_t handleType, uint16_t handle, int8_t txPwrLvl);
@@ -77,10 +73,6 @@ static struct bt_nus_cb nus_cb = {
     .received = bt_receive_cb,
 };
 
-
-K_THREAD_DEFINE(blinkThreadId, BLINK_STACKSIZE, blink, NULL, NULL, NULL, BLINK_PRIORITY, 0, K_TICKS_FOREVER);
-
-
 void main(void)
 {
     bt_addr_le_t addr;
@@ -102,9 +94,9 @@ void main(void)
     productionStart();
 
     ledsInit();
-    ledsSetState(LED_RED, 1);
-    ledsSetState(LED_GREEN, 1);
-    ledsSetState(LED_BLUE, 1);
+    ledsSetState(LED_RED, 0);
+    ledsSetState(LED_GREEN, 0);
+    ledsSetState(LED_BLUE, 0);
 
     buttonsInit(&onButtonPressCb);
 
@@ -114,28 +106,6 @@ void main(void)
     if (err) {
         LOG_ERR("Failed to initialize UART service (err: %d)", err);
         return;
-    }
-
-    k_timer_init(&blinkTimer, timerCb, NULL);
-    k_timer_start(&blinkTimer, K_MSEC(advIntervals[advIntervalIndex]), K_NO_WAIT);
-    k_thread_start(blinkThreadId);
-}
-
-static void blink(void) {
-    LOG_INF("Started blink thread");
-    while (1) {
-        k_timer_status_sync(&blinkTimer);
-        if (isAdvRunning) {
-            ledsSetState(LED_BLUE, 0);
-            k_sleep(K_MSEC(MIN_LED_ADV_IND_MS));
-            ledsSetState(LED_BLUE, 1);
-        }
-
-        int32_t sleep_time = advIntervals[advIntervalIndex] - MIN_LED_ADV_IND_MS;
-        if (sleep_time <= 0) {
-            sleep_time = 25; // Otherwise constant on
-        }
-        k_timer_start(&blinkTimer, K_MSEC(sleep_time), K_NO_WAIT);
     }
 }
 
@@ -158,20 +128,22 @@ static void onButtonPressCb(buttonPressType_t type) {
     LOG_INF("Pressed, type: %d", type);
 
     if (type == BUTTONS_SHORT_PRESS) {
-        if (isAdvRunning) {
-            advIntervalIndex = (advIntervalIndex + 1) % NUM_ADV_INTERVALS;
-            uint16_t new_adv_interval = advIntervals[advIntervalIndex];
-            LOG_INF("New interval: %d", new_adv_interval);
-            btAdvUpdateAdvInterval(new_adv_interval, new_adv_interval);
+        // If stopped, then restart if adv. interval was changed
+        isAdvRunning = true;
+        advIntervalIndex = (advIntervalIndex + 1) % NUM_ADV_INTERVALS;
+        uint16_t new_adv_interval = advIntervals[advIntervalIndex];
+        LOG_INF("New interval: %d => %d", advIntervalIndex, new_adv_interval);
+        btAdvUpdateAdvInterval(new_adv_interval, new_adv_interval);
 
-            k_timer_stop(&blinkTimer);
-
+        // Blink advertising interval index times
+        ledsSetState(LED_BLUE, 1);
+        for (int i = 0; i < advIntervalIndex + 1; i++) {
+            k_sleep(K_MSEC(LED_BLINK_INTERVAL_MS));
             ledsSetState(LED_BLUE, 0);
-            k_sleep(K_MSEC(MIN_LED_ADV_IND_MS));
+            k_sleep(K_MSEC(LED_BLINK_INTERVAL_MS));
             ledsSetState(LED_BLUE, 1);
-
-            k_timer_start(&blinkTimer, K_MSEC(advIntervals[advIntervalIndex]), K_NO_WAIT);
         }
+        ledsSetState(LED_BLUE, 0);
     } else {
         isAdvRunning = !isAdvRunning;
         if (isAdvRunning) {
@@ -180,13 +152,8 @@ static void onButtonPressCb(buttonPressType_t type) {
         } else {
             LOG_INF("Adv stopped");
             btAdvStop();
-            ledsSetState(LED_BLUE, 1);
         }
     }
-}
-
-static void timerCb(struct k_timer * timer)
-{
 }
 
 static void setTxPower(uint8_t handleType, uint16_t handle, int8_t txPwrLvl)

@@ -84,7 +84,7 @@ void ledsSetState(leds_t led, uint8_t on)
 
     state.leds[led].state = on;
 
-    __ASSERT_NO_MSG(gpio_pin_set(state.leds[led].dev, state.leds[led].pin, on) == 0);
+    __ASSERT_NO_MSG(gpio_pin_set(state.leds[led].dev, state.leds[led].pin, !on) == 0);
 }
 
 void ledsToggle(leds_t led)

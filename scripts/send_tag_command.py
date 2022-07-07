@@ -14,16 +14,29 @@ if __name__ == "__main__":
         help="List of AT commands to send to all tags",
     )
 
+    parser.add_argument(
+        "--address",
+        dest="address",
+        required=False,
+        help="Mac of tag to send command to",
+    )
+
     args = parser.parse_args()
+    res = None
+    flatten_results = []
+    if (args.address == None):
+        tags = ble_list_uart_devices(timeout=10.0)
+        print("Found {0} AoA tags".format(len(tags)))
+        print(tags)
+        res = ble_send_at_commands(list(tags.values()), args.commands)
+    else:
+        res = ble_send_at_commands(args.address, args.commands)
 
-    tags = ble_list_uart_devices(timeout=10.0)
-    print("Found {0} AoA tags".format(len(tags)))
-    print(tags)
-    mac_addresses = []
-
-    res = ble_send_at_commands(list(tags.values()), args.commands)
-    flatten_results = [x for xs in res for x in xs]
-    print(flatten_results)
+    if isinstance(res[0], list):
+        flatten_results = [x for xs in res for x in xs]
+        print(flatten_results)
+    else:
+        flatten_results = res
 
     num_errors = 0
     for reply in flatten_results:

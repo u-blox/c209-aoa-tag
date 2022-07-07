@@ -7,8 +7,8 @@ This repository contains an example Tag application for use with u-blox C211 Blu
 # Setup
 ## Building with command line
 - Open nRF Connect and open Toolchain Manager
-- Download nRF Connect SDK v1.9.1.
-- Right next to the "nRF Connect SDK v1.9.1" you have a dropdown, click "Open bash". This step is not required, but it will set up the necessary environment variables for you.
+- Download nRF Connect SDK v2.0.0.
+- Right next to the "nRF Connect SDK v2.0.0" you have a dropdown, click "Open bash". This step is not required, but it will set up the necessary environment variables for you.
 - `cd` to project folder
 - `west build -b ubx_evkninab4_nrf52833`
 - `west flash`

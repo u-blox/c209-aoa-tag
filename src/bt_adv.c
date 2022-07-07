@@ -56,8 +56,8 @@ static struct bt_le_adv_param param =
 
 static struct bt_le_adv_param param_nus =
         BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_USE_NAME | BT_LE_ADV_OPT_CONNECTABLE,
-                     BT_GAP_ADV_FAST_INT_MIN_2,
-                     BT_GAP_ADV_FAST_INT_MAX_2,
+                     BT_GAP_ADV_SLOW_INT_MIN / 2,
+                     BT_GAP_ADV_SLOW_INT_MAX / 2,
                      NULL);
 
 static struct bt_le_ext_adv_start_param ext_adv_start_param = {

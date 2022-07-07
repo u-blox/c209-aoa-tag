@@ -40,12 +40,16 @@
 
 LOG_MODULE_REGISTER(app, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
-#define LED_BLINK_INTERVAL_MS   150
+#define BLINK_STACKSIZE         512
+#define BLINK_PRIORITY          7
 #define NUM_ADV_INTERVALS       3
+#define LED_BLINK_INTERVAL_MS   150
+#define BLINK_INTERVAL_MS       5000
 
 static void btReadyCb(int err);
 static void onButtonPressCb(buttonPressType_t type);
 static void setTxPower(uint8_t handleType, uint16_t handle, int8_t txPwrLvl);
+static void blink(void);
 
 static void connected(struct bt_conn *conn, uint8_t err);
 static void disconnected(struct bt_conn *conn, uint8_t reason);
@@ -72,6 +76,9 @@ static uint32_t nus_max_send_len;
 static struct bt_nus_cb nus_cb = {
     .received = bt_receive_cb,
 };
+
+K_THREAD_DEFINE(blinkThreadId, BLINK_STACKSIZE, blink, NULL, NULL, NULL, BLINK_PRIORITY, 0, K_TICKS_FOREVER);
+
 
 void main(void)
 {
@@ -107,7 +114,22 @@ void main(void)
         LOG_ERR("Failed to initialize UART service (err: %d)", err);
         return;
     }
+
+    k_thread_start(blinkThreadId);
 }
+
+static void blink(void) {
+    LOG_INF("Started blink thread");
+    while (1) {
+        if (isAdvRunning) {
+            ledsSetState(LED_BLUE, 1);
+            k_sleep(K_MSEC(10));
+            ledsSetState(LED_BLUE, 0);
+        }
+        k_msleep(BLINK_INTERVAL_MS);
+    }
+}
+
 
 static void btReadyCb(int err)
 {

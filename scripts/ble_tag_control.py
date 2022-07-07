@@ -43,13 +43,13 @@ async def send_at_commands(device, command_list):
     max_tries = 8
 
     def handle_rx(_: int, data: bytearray):
-        print("received:", data)
+        print(device, "received:", data)
         rsps.append(data.decode("utf-8"))
         cmd_sent_evt.set()
 
     for i in range(max_tries):
         try:
-            print("Try connecting to", device.address)
+            print("Try connecting to", device)
             async with BleakClient(
                 device, timeout=10.0, disconnected_callback=handle_disconnect
             ) as client:
@@ -92,7 +92,7 @@ def ble_send_at_commands(devices, command_list):
         loop.close()
         return results
     else:
-        return asyncio.run(send_at_commands(device, command_list))
+        return asyncio.run(send_at_commands(devices, command_list))
 
 
 def ble_list_uart_devices(timeout):

@@ -1,12 +1,11 @@
 &arduino_i2c {
     status = "okay";
-	sda-pin = <4>;
-	scl-pin = <30>;
-    
+
     lis2dw12@19 {
 		compatible = "st,lis2dw12";
 		reg = <0x19>;
 		label = "LIS2DW12";
+		power-mode = <0>;
 	};
 
 	bme280@76 {
@@ -16,12 +15,32 @@
 	};
 };
 
+
 /* Delete partitions specified on the board dts file */
 /delete-node/ &boot_partition;
 /delete-node/ &slot0_partition;
 /delete-node/ &storage_partition;
 /delete-node/ &scratch_partition;
 /delete-node/ &slot1_partition;
+/delete-node/ &i2c0_default;
+/delete-node/ &i2c0_sleep;
+
+&pinctrl {
+	i2c0_default: i2c0_default {
+		group1 {
+			psels = <NRF_PSEL(TWIM_SDA, 0, 4)>,
+				<NRF_PSEL(TWIM_SCL, 0, 30)>;
+		};
+	};
+
+	i2c0_sleep: i2c0_sleep {
+		group1 {
+			psels = <NRF_PSEL(TWIM_SDA, 0, 4)>,
+				<NRF_PSEL(TWIM_SCL, 0, 30)>;
+			low-power-enable;
+		};
+	};
+};
 
 &flash0 {
 	partitions {

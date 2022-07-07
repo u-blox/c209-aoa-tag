@@ -100,6 +100,14 @@ int productionStart(void)
 {
     int err;
     uint32_t start_time;
+
+    const struct device *bme_device = DEVICE_DT_GET_ANY(bosch_bme280);
+    // Power down to save power
+    if (bme_device != NULL) {
+        err = pm_device_action_run(bme_device, PM_DEVICE_ACTION_SUSPEND);
+        LOG_ERR("bosch_bme280 suspend err: %d", err);
+    }
+
     pUartDev = device_get_binding(DT_LABEL(DT_NODELABEL(uart0)));
 
     if (!pUartDev) {
@@ -415,7 +423,7 @@ static void sendString(char* str)
 static bool testLis2dw(void)
 {
     struct sensor_value acc_val[3];
-    const struct device *sensor = device_get_binding(DT_LABEL(DT_INST(0, st_lis2dw12)));
+    const struct device *sensor = DEVICE_DT_GET_ANY(st_lis2dw12);
 
     if (sensor == NULL) {
         LOG_ERR("Could not get %s devicen", DT_LABEL(DT_INST(0, st_lis2dw12)));
@@ -451,12 +459,14 @@ static bool testLis2dw(void)
 static bool testBme280(void)
 {
     struct sensor_value temp, press, humidity;
-	const struct device *sensor = device_get_binding(DT_LABEL(DT_INST(0, bosch_bme280)));
+	int err;
+    const struct device *sensor = DEVICE_DT_GET_ANY(bosch_bme280);
 
 	if (sensor == NULL) {
 		LOG_ERR("Error: no device found.");
 		return false;
 	}
+
 
 	if (!device_is_ready(sensor)) {
 		LOG_ERR("Error: Device \"%s\" is not ready; "
@@ -465,7 +475,13 @@ static bool testBme280(void)
 		return false;
 	}
 
-    int err = sensor_sample_fetch(sensor);
+    err = pm_device_action_run(sensor, PM_DEVICE_ACTION_RESUME);
+    if (err != 0 && err != -EALREADY) {
+        LOG_ERR("Error: Could not resume from suspended state BME280");
+        return false;
+    }
+
+    err = sensor_sample_fetch(sensor);
     if (!err) {
         sensor_channel_get(sensor, SENSOR_CHAN_AMBIENT_TEMP, &temp);
         sensor_channel_get(sensor, SENSOR_CHAN_PRESS, &press);

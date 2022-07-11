@@ -245,7 +245,7 @@ bool productionHandleCommand(const uint8_t *const inAtBuf, uint32_t commandLen, 
     } else if (strncmp("AT+UMLA=1", inAtBuf, 9) == 0 && commandLen == 9) {
         bt_addr_le_t addr;
         char macHex[MAC_ADDR_LEN * 2 + 1];
-        uint8_t macSwapped[MAC_ADDR_LEN];
+        uint8_t macSwapped[MAC_ADDR_LEN + 1];
         memset(macHex, 0, sizeof(macHex));
         utilGetBtAddr(&addr);
         if (addr.type == BT_ADDR_LE_PUBLIC) {
@@ -258,7 +258,7 @@ bool productionHandleCommand(const uint8_t *const inAtBuf, uint32_t commandLen, 
         } else {
             memcpy(macSwapped, addr.a.val, MAC_ADDR_LEN);
         }
-        bin2hex(macSwapped, MAC_ADDR_LEN, macHex, MAC_ADDR_LEN * 2);
+        bin2hex(macSwapped, MAC_ADDR_LEN, macHex, MAC_ADDR_LEN * 2 + 1);
         utilToupper(macHex);
         sprintf(outBuf, "\r\n+UMLA:%s\r\n", macHex);
         outputRsp(outBuf);

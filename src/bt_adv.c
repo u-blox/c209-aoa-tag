@@ -37,7 +37,7 @@ LOG_MODULE_REGISTER(bt_adv_aoa, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 /* Number of CTE send in single periodic advertising train */
 #define PER_ADV_EVENT_CTE_COUNT 1
 
-#define PER_ADV_DATA_LEN 200
+#define PER_ADV_DATA_LEN 10
 
 static void adv_sent_cb(struct bt_le_ext_adv *adv, struct bt_le_ext_adv_sent_info *info);
 
@@ -48,16 +48,18 @@ static struct bt_le_ext_adv_cb adv_callbacks = {
 static struct bt_le_ext_adv *adv_set;
 
 static struct bt_le_adv_param param =
+        // Below intervals are a tradeoff between power consumption and the time
+        // it takes for the scanner to start tracking this tag. Set it accordingly.
         BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_EXT_ADV |
                      BT_LE_ADV_OPT_USE_NAME | BT_LE_ADV_OPT_NO_2M,
-                     BT_GAP_ADV_FAST_INT_MIN_2,
-                     BT_GAP_ADV_FAST_INT_MAX_2,
+                     BT_GAP_ADV_FAST_INT_MIN_2 * 2, // 200ms
+                     BT_GAP_ADV_FAST_INT_MAX_2 * 2, // 300ms
                      NULL);
 
 static struct bt_le_adv_param param_nus =
         BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_USE_NAME | BT_LE_ADV_OPT_CONNECTABLE,
-                     BT_GAP_ADV_SLOW_INT_MIN / 2,
-                     BT_GAP_ADV_SLOW_INT_MAX / 2,
+                     BT_GAP_ADV_SLOW_INT_MIN,
+                     BT_GAP_ADV_SLOW_INT_MAX,
                      NULL);
 
 static struct bt_le_ext_adv_start_param ext_adv_start_param = {

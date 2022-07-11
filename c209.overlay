@@ -22,8 +22,6 @@
 /delete-node/ &storage_partition;
 /delete-node/ &scratch_partition;
 /delete-node/ &slot1_partition;
-/delete-node/ &i2c0_default;
-/delete-node/ &i2c0_sleep;
 
 &pinctrl {
 	i2c0_default: i2c0_default {

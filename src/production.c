@@ -232,7 +232,7 @@ static int validTxPowers(long txPower)
     return error;
 }
 
-bool productionHandleCommand(uint8_t* inAtBuf, uint32_t commandLen, atOutput outputRsp)
+bool productionHandleCommand(const uint8_t *const inAtBuf, uint32_t commandLen, atOutput outputRsp)
 {
     bool validCommand = true;
     char outBuf[100];

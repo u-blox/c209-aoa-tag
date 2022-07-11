@@ -26,6 +26,6 @@ typedef void (*atOutput)(char* str);
  *          Once a valid AT command is sent the module, it will stay in test/configuration mode until reset, no 10 seconds limit.
  */
 int productionStart(void);
-bool productionHandleCommand(uint8_t* inAtBuf, uint32_t commandLen, atOutput output);
+bool productionHandleCommand(const uint8_t *const inAtBuf, uint32_t commandLen, atOutput output);
 
 #endif

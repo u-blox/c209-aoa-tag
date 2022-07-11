@@ -37,8 +37,9 @@ target_sources(app PRIVATE ${app_sources})
 zephyr_library_include_directories(${ZEPHYR_BASE}/samples/bluetooth)
 
 # Get git commit and  build time and pass it to version_config.h
+
 execute_process(COMMAND
-  "${GIT_EXECUTABLE}" describe --always --dirty
+  git describe --always --dirty
   WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
   OUTPUT_VARIABLE GIT_SHA1
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)

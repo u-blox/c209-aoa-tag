@@ -180,12 +180,11 @@ void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t* namespace, uint8_t* 
     LOG_INF("success\n");
 
     LOG_INF("Legacy advertising NUS enable...");
-	err = bt_le_adv_start(&param_nus, ad_nus, ARRAY_SIZE(ad_nus),
-			      NULL, 0);
-	if (err) {
-		printk("Advertising failed to start (err %d)\n", err);
-		return;
-	}
+    err = bt_le_adv_start(&param_nus, ad_nus, ARRAY_SIZE(ad_nus), NULL, 0);
+    if (err) {
+        printk("Advertising failed to start (err %d)\n", err);
+        return;
+    }
     LOG_INF("success\n");
 }
 

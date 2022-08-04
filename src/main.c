@@ -132,6 +132,9 @@ static void blink(void) {
     uint64_t lastAdvRestartMs = k_uptime_get();
     uint64_t currentTime;
     uint8_t randDelayMs;
+    struct sensor_value temp, press, humidity;
+    struct bt_data adData;
+    int32_t sensorData[NUM_SENSOR_DATA];
 
     while (1) {
         if (isAdvRunning) {
@@ -148,6 +151,21 @@ static void blink(void) {
                 k_msleep(randDelayMs);
                 btAdvStart();
                 lastAdvRestartMs = currentTime;
+            }
+        }
+
+        if (isAdvRunning) {
+            if (productionGetBme280Data(&temp, &press, &humidity)) {
+                adData.type = BT_DATA_MANUFACTURER_DATA;
+                adData.data = sensorData;
+                sensorData[0] = temp.val1;
+                sensorData[1] = temp.val2;
+                sensorData[2] = press.val1;
+                sensorData[3] = press.val2;
+                sensorData[4] = humidity.val1;
+                sensorData[5] = humidity.val2;
+                adData.data_len = sizeof(int32_t) * NUM_SENSOR_DATA;
+                btAdvSetPerAdvData(&adData, 1);
             }
         }
 

@@ -18,6 +18,7 @@
 #define __BT_ADV_H
 
 #include <zephyr.h>
+#include <bluetooth/bluetooth.h>
 
 #define EDDYSTONE_INSTANCE_ID_LEN   6
 #define EDDYSTONE_NAMESPACE_LENGFTH 10
@@ -54,5 +55,16 @@ void btAdvStop(void);
  * @param   max_int         Max adv. interval in milliseconds
  */
 void btAdvUpdateAdvInterval(uint16_t min, uint16_t max);
+
+/**
+ * @brief Set or update the periodic advertising data.
+ *
+ * Advertising must be initialized before calling.
+ *
+ * @param ad        Advertising data.
+ * @param ad_len    Advertising data length.
+ *
+ */
+void btAdvSetPerAdvData(struct bt_data* data, int len);
 
 #endif

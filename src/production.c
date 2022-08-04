@@ -105,7 +105,9 @@ int productionStart(void)
     // Power down to save power
     if (bme_device != NULL) {
         err = pm_device_action_run(bme_device, PM_DEVICE_ACTION_SUSPEND);
-        LOG_ERR("bosch_bme280 suspend err: %d", err);
+        if (err != 0) {
+            LOG_ERR("bosch_bme280 suspend err: %d", err);
+        }
     }
 
     pUartDev = device_get_binding(DT_LABEL(DT_NODELABEL(uart0)));
@@ -459,6 +461,11 @@ static bool testLis2dw(void)
 static bool testBme280(void)
 {
     struct sensor_value temp, press, humidity;
+    return productionGetBme280Data(&temp, &press, &humidity);
+}
+
+bool productionGetBme280Data(struct sensor_value* temp, struct sensor_value* press, struct sensor_value* humidity)
+{
 	int err;
     const struct device *sensor = DEVICE_DT_GET_ANY(bosch_bme280);
 
@@ -483,15 +490,21 @@ static bool testBme280(void)
 
     err = sensor_sample_fetch(sensor);
     if (!err) {
-        sensor_channel_get(sensor, SENSOR_CHAN_AMBIENT_TEMP, &temp);
-        sensor_channel_get(sensor, SENSOR_CHAN_PRESS, &press);
-        sensor_channel_get(sensor, SENSOR_CHAN_HUMIDITY, &humidity);
+        sensor_channel_get(sensor, SENSOR_CHAN_AMBIENT_TEMP, temp);
+        sensor_channel_get(sensor, SENSOR_CHAN_PRESS, press);
+        sensor_channel_get(sensor, SENSOR_CHAN_HUMIDITY, humidity);
 
-        LOG_INF("temp: %d.%06d; press: %d.%06d; humidity: %d.%06d",
-                temp.val1, temp.val2, press.val1, press.val2,
-                humidity.val1, humidity.val2);
+        LOG_DBG("temp: %d.%06d; press: %d.%06d; humidity: %d.%06d",
+                temp->val1, temp->val2, press->val1, press->val2,
+                humidity->val1, humidity->val2);
     } else {
         LOG_ERR("Failed fetching sample from %s", sensor->name);
+        return false;
+    }
+
+    err = pm_device_action_run(sensor, PM_DEVICE_ACTION_SUSPEND);
+    if (err != 0 && err != -EALREADY) {
+        LOG_ERR("Error: Could not PM_DEVICE_ACTION_SUSPEND from resumed state BME280");
         return false;
     }
 

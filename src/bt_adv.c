@@ -25,7 +25,6 @@
 #include <bluetooth/direction.h>
 #include <sys/byteorder.h>
 #include <sys/util.h>
-#include <random/rand32.h>
 
 #include <bluetooth/services/nus.h>
 
@@ -207,8 +206,8 @@ void btAdvStart(void) {
 }
 
 void btAdvStop(void) {
-    bt_le_per_adv_stop(adv_set);
-    bt_le_ext_adv_stop(adv_set);
+    __ASSERT_NO_MSG(0 == bt_le_per_adv_stop(adv_set));
+    __ASSERT_NO_MSG(0 == bt_le_ext_adv_stop(adv_set));
     LOG_INF("Adv stopped");
 }
 
@@ -228,4 +227,14 @@ void btAdvUpdateAdvInterval(uint16_t min, uint16_t max) {
     }
     LOG_INF("success\n");
     btAdvStart();
+}
+
+void btAdvSetPerAdvData(struct bt_data* data, int len)
+{
+    LOG_INF("Set per adv data...");
+    int err = bt_le_per_adv_set_data(adv_set, data, len);
+    if (err) {
+        LOG_ERR("failed (err %d)\n", err);
+        return;
+    }
 }

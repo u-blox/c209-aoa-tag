@@ -27,5 +27,7 @@ typedef void (*atOutput)(char* str);
  */
 int productionStart(void);
 bool productionHandleCommand(const uint8_t *const inAtBuf, uint32_t commandLen, atOutput output);
+bool productionGetBme280Data(struct sensor_value* temp, struct sensor_value* press, struct sensor_value* humidity);
+
 
 #endif

@@ -27,7 +27,6 @@
 #include <device.h>
 #include <drivers/sensor.h>
 #include "bt_util.h"
-#include <bluetooth/bluetooth.h>
 #include <bluetooth/hci.h>
 #include <bluetooth/hci_vs.h>
 #include <sys/byteorder.h>
@@ -40,11 +39,13 @@
 
 LOG_MODULE_REGISTER(app, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
-#define BLINK_STACKSIZE         512
+#define BLINK_STACKSIZE         1024
 #define BLINK_PRIORITY          7
 #define NUM_ADV_INTERVALS       3
 #define LED_BLINK_INTERVAL_MS   150
 #define BLINK_INTERVAL_MS       5000
+// In order to avoid accidental collisions between tags we restart adv. every now and then.
+#define ADV_RESTART_INTERVAL    (10 * 60 * 1000) // 10 min
 
 static void btReadyCb(int err);
 static void onButtonPressCb(buttonPressType_t type);
@@ -82,7 +83,14 @@ K_THREAD_DEFINE(blinkThreadId, BLINK_STACKSIZE, blink, NULL, NULL, NULL, BLINK_P
 
 void main(void)
 {
+    uint8_t randDelayMs;
     bt_addr_le_t addr;
+
+    // If all tags are powered on at once their advertisements may collide.
+    // Use a random delay in order to give them some random offset.
+    randDelayMs = (uint8_t)(sys_rand32_get() & 0xFF);
+    k_msleep(randDelayMs);
+    LOG_DBG("Slept %dms", randDelayMs);
     utilGetBtAddr(&addr);
     bluetoothReady = 0;
 
@@ -118,14 +126,31 @@ void main(void)
     k_thread_start(blinkThreadId);
 }
 
+#define NUM_SENSOR_DATA 6
 static void blink(void) {
     LOG_INF("Started blink thread");
+    uint64_t lastAdvRestartMs = k_uptime_get();
+    uint64_t currentTime;
+    uint8_t randDelayMs;
+
     while (1) {
         if (isAdvRunning) {
             ledsSetState(LED_BLUE, 1);
             k_sleep(K_MSEC(10));
             ledsSetState(LED_BLUE, 0);
         }
+        currentTime = k_uptime_get();
+        if (currentTime - lastAdvRestartMs >= ADV_RESTART_INTERVAL) {
+            if (isAdvRunning) {
+                randDelayMs = (uint8_t)(sys_rand32_get() & 0xFF);
+                LOG_INF("Restarting per. adv. to avoid collisions. Delay: %d", randDelayMs);
+                btAdvStop();
+                k_msleep(randDelayMs);
+                btAdvStart();
+                lastAdvRestartMs = currentTime;
+            }
+        }
+
         k_msleep(BLINK_INTERVAL_MS);
     }
 }

@@ -21,17 +21,26 @@ if __name__ == "__main__":
         help="Mac of tag to send command to",
     )
 
+    parser.add_argument(
+        "--timeout",
+        dest="timeout",
+        default=10,
+        required=False,
+        help="Scan timeout for discovery of AoA tags",
+    )
+
+
     args = parser.parse_args()
     res = None
     flatten_results = []
     if (args.address == None):
-        tags = ble_list_uart_devices(timeout=10.0)
+        tags = ble_list_uart_devices(timeout=int(args.timeout))
         print("Found {0} AoA tags".format(len(tags)))
         print(tags)
         res = ble_send_at_commands(list(tags.values()), args.commands)
     else:
         res = ble_send_at_commands(args.address, args.commands)
-
+    print(res)
     if isinstance(res[0], list):
         flatten_results = [x for xs in res for x in xs]
         print(flatten_results)
@@ -40,7 +49,7 @@ if __name__ == "__main__":
 
     num_errors = 0
     for reply in flatten_results:
-        if "ERROR" in reply:
+        if "ERROR" in reply or len(reply) == 0:
             num_errors = num_errors + 1
 
     if num_errors > 0:

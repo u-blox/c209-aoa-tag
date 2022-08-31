@@ -34,8 +34,9 @@
 #include "storage.h"
 #include <logging/log.h>
 
+#if defined(CONFIG_BT_NUS)
 #include <bluetooth/services/nus.h>
-
+#endif
 
 LOG_MODULE_REGISTER(app, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
@@ -44,23 +45,35 @@ LOG_MODULE_REGISTER(app, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 #define NUM_ADV_INTERVALS       3
 #define LED_BLINK_INTERVAL_MS   150
 #define BLINK_INTERVAL_MS       5000
+
 // In order to avoid accidental collisions between tags we restart adv. every now and then.
+// Comment out to disable this.
 #define ADV_RESTART_INTERVAL    (10 * 60 * 1000) // 10 min
+
+// Send BME280 in the periodic advertsiing data
+#define SEND_SENSOR_DATA_IN_PER_ADV_DATA
 
 static void btReadyCb(int err);
 static void onButtonPressCb(buttonPressType_t type);
 static void setTxPower(uint8_t handleType, uint16_t handle, int8_t txPwrLvl);
 static void blink(void);
 
+#if defined(CONFIG_BT_NUS)
 static void connected(struct bt_conn *conn, uint8_t err);
 static void disconnected(struct bt_conn *conn, uint8_t reason);
 static void nus_send_data(char* data);
 static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data, uint16_t len);
-
 BT_CONN_CB_DEFINE(conn_callbacks) = {
     .connected    = connected,
     .disconnected = disconnected,
 };
+static struct bt_conn *current_conn;
+static uint32_t nus_max_send_len;
+
+static struct bt_nus_cb nus_cb = {
+    .received = bt_receive_cb,
+};
+#endif
 
 static bool isAdvRunning = true;
 static uint16_t advIntervals[NUM_ADV_INTERVALS] = {50, 100, 1000};
@@ -71,12 +84,6 @@ struct k_timer blinkTimer;
 static uint8_t bluetoothReady;
 static uint8_t uuid[EDDYSTONE_INSTANCE_ID_LEN];
 
-static struct bt_conn *current_conn;
-static uint32_t nus_max_send_len;
-
-static struct bt_nus_cb nus_cb = {
-    .received = bt_receive_cb,
-};
 
 K_THREAD_DEFINE(blinkThreadId, BLINK_STACKSIZE, blink, NULL, NULL, NULL, BLINK_PRIORITY, 0, K_TICKS_FOREVER);
 
@@ -117,24 +124,29 @@ void main(void)
 
     __ASSERT(bt_enable(btReadyCb) == 0, "Bluetooth init failed");
 
+#if defined(CONFIG_BT_NUS)
     int err = bt_nus_init(&nus_cb);
     if (err) {
         LOG_ERR("Failed to initialize UART service (err: %d)", err);
         return;
     }
-
+#endif
     k_thread_start(blinkThreadId);
 }
 
-#define NUM_SENSOR_DATA 6
 static void blink(void) {
     LOG_INF("Started blink thread");
+#ifdef ADV_RESTART_INTERVAL
     uint64_t lastAdvRestartMs = k_uptime_get();
     uint64_t currentTime;
     uint8_t randDelayMs;
+#endif
+#ifdef SEND_SENSOR_DATA_IN_PER_ADV_DATA
+#define NUM_SENSOR_DATA 6
     struct sensor_value temp, press, humidity;
     struct bt_data adData;
     int32_t sensorData[NUM_SENSOR_DATA];
+#endif
 
     while (1) {
         if (isAdvRunning) {
@@ -142,6 +154,7 @@ static void blink(void) {
             k_sleep(K_MSEC(10));
             ledsSetState(LED_BLUE, 0);
         }
+#ifdef ADV_RESTART_INTERVAL
         currentTime = k_uptime_get();
         if (currentTime - lastAdvRestartMs >= ADV_RESTART_INTERVAL) {
             if (isAdvRunning) {
@@ -153,22 +166,23 @@ static void blink(void) {
                 lastAdvRestartMs = currentTime;
             }
         }
-
+#endif
+#ifdef SEND_SENSOR_DATA_IN_PER_ADV_DATA
         if (isAdvRunning) {
             if (productionGetBme280Data(&temp, &press, &humidity)) {
-                adData.type = BT_DATA_MANUFACTURER_DATA;
-                adData.data = sensorData;
                 sensorData[0] = temp.val1;
                 sensorData[1] = temp.val2;
                 sensorData[2] = press.val1;
                 sensorData[3] = press.val2;
                 sensorData[4] = humidity.val1;
                 sensorData[5] = humidity.val2;
+                adData.type = BT_DATA_MANUFACTURER_DATA;
+                adData.data = (uint8_t*)sensorData;
                 adData.data_len = sizeof(int32_t) * NUM_SENSOR_DATA;
                 btAdvSetPerAdvData(&adData, 1);
             }
         }
-
+#endif
         k_msleep(BLINK_INTERVAL_MS);
     }
 }
@@ -252,6 +266,7 @@ static void setTxPower(uint8_t handleType, uint16_t handle, int8_t txPwrLvl)
     net_buf_unref(rsp);
 }
 
+#if defined(CONFIG_BT_NUS)
 static void connected(struct bt_conn *conn, uint8_t err)
 {
     char addr[BT_ADDR_LE_STR_LEN];
@@ -298,3 +313,4 @@ static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data, uint1
 
     productionHandleCommand(data, len, nus_send_data);
 }
+#endif

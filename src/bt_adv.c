@@ -103,11 +103,6 @@ static struct bt_data ad[] = {
     )
 };
 
-static uint8_t per_ad_data[PER_ADV_DATA_LEN];
-static struct bt_data per_ad[] = {
-    BT_DATA(BT_DATA_MANUFACTURER_DATA, per_ad_data, sizeof(per_ad_data))
-};
-
 static const struct bt_data ad_nus[] = {
     BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
     BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_UUID_NUS_VAL),
@@ -120,13 +115,6 @@ void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t* namespace, uint8_t* 
     memcpy((uint8_t*)&ad[2].data[ADV_DATA_OFFSET_NAMESPACE], namespace, EDDYSTONE_NAMESPACE_LENGFTH);
     memcpy((uint8_t*)&ad[2].data[ADV_DATA_OFFSET_INSTANCE], instance_id, EDDYSTONE_INSTANCE_ID_LEN);
     memcpy((uint8_t*)&ad[2].data[ADV_DATA_OFFSET_TX_POWER], &txPower, sizeof(txPower));
-    memset(per_ad_data, 0, sizeof(per_ad_data));
-
-    // Just send some dummy data for now, this can be any customer data
-    // later and may also include som u-blox reserved parts for sensors etc.
-    for (int i = 0; i < sizeof(per_ad_data); i++) {
-        per_ad_data[i] = 'A' + (i % ('Z' - 'A'));
-    }
 
     int err = bt_le_ext_adv_create(&param, &adv_callbacks, &adv_set);
     if (err) {
@@ -157,14 +145,6 @@ void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t* namespace, uint8_t* 
         .options = BT_LE_ADV_OPT_USE_TX_POWER | BT_LE_ADV_OPT_NO_2M,
     };
     err = bt_le_per_adv_set_param(adv_set, &per_adv_param);
-    if (err) {
-        LOG_ERR("failed (err %d)\n", err);
-        return;
-    }
-    LOG_INF("success\n");
-
-    LOG_INF("Set per adv data...");
-    err = bt_le_per_adv_set_data(adv_set, per_ad, ARRAY_SIZE(per_ad));
     if (err) {
         LOG_ERR("failed (err %d)\n", err);
         return;

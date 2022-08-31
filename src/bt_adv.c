@@ -51,7 +51,7 @@ static struct bt_le_adv_param param =
         // Below intervals are a tradeoff between power consumption and the time
         // it takes for the scanner to start tracking this tag. Set it accordingly.
         BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_EXT_ADV |
-                     BT_LE_ADV_OPT_USE_NAME | BT_LE_ADV_OPT_NO_2M,
+                     BT_LE_ADV_OPT_USE_NAME,
                      BT_GAP_ADV_FAST_INT_MIN_2 * 2, // 200ms
                      BT_GAP_ADV_FAST_INT_MAX_2 * 2, // 300ms
                      NULL);
@@ -142,7 +142,7 @@ void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t* namespace, uint8_t* 
     struct bt_le_per_adv_param per_adv_param = {
         .interval_min = minAdvInterval,
         .interval_max = maxAdvInterval,
-        .options = BT_LE_ADV_OPT_USE_TX_POWER | BT_LE_ADV_OPT_NO_2M,
+        .options = BT_LE_ADV_OPT_USE_TX_POWER,
     };
     err = bt_le_per_adv_set_param(adv_set, &per_adv_param);
     if (err) {
@@ -199,7 +199,7 @@ void btAdvUpdateAdvInterval(uint16_t min, uint16_t max) {
     struct bt_le_per_adv_param per_adv_param = {
         .interval_min = minAdvInterval,
         .interval_max = maxAdvInterval,
-        .options = BT_LE_ADV_OPT_USE_TX_POWER | BT_LE_ADV_OPT_NO_2M,
+        .options = BT_LE_ADV_OPT_USE_TX_POWER,
     };
     int err = bt_le_per_adv_set_param(adv_set, &per_adv_param);
     if (err) {

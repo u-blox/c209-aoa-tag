@@ -50,8 +50,17 @@ C209 boards come pre flashed with a DFU bootloader. To build a binary that is co
 
 `nrfutil` executable for flashing with OpenCPU DFU Bootloader can be downloaded from here: https://github.com/NordicSemiconductor/pc-nrfutil/releases 
 
+# Communication with AT commands
+In `src/at_host` there is a __very__ basic AT command handler.
+# Over UART
+When the application boots it will accept AT commands over the UART for 10s before it shuts off the UART in order to save power.
+If a successful AT command was sent within 10s the application will keep UART enabled until it's reset.
+## Over NUS
+If Kconfig `CONFIG_SEND_SENSOR_DATA_IN_PER_ADV_DATA` is enabled (default yes) then the application will accept AT commands over the Nordic UART Service.
+Each write will be parsed as an AT command so no need for line termination characters etc.
+
 # Using the Sensors on the C209
-The C209 application board comes with some sensors. Study `src/production.c` for example how to get data from the sensors.
+The C209 application board comes with some sensors. Study `src/sensors.c` for example how to get data from the sensors.
 
 # Using the application
 Please review the [user guide](https://www.u-blox.com/en/docs/UBX-21004616) for more details on how to use the XPLR-AOA-1 and XPLR-AOA-2 kits.

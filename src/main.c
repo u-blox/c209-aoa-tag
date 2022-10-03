@@ -30,9 +30,10 @@
 #include <bluetooth/hci.h>
 #include <bluetooth/hci_vs.h>
 #include <sys/byteorder.h>
-#include "production.h"
+#include "at_host.h"
 #include "storage.h"
 #include <logging/log.h>
+#include "sensors.h"
 
 #if defined(CONFIG_BT_NUS)
 #include <bluetooth/services/nus.h>
@@ -108,7 +109,7 @@ void main(void)
     }
     LOG_HEXDUMP_INF(uuid, EDDYSTONE_INSTANCE_ID_LEN, "InstanceId (MAC)");
 
-    productionStart();
+    atHostStart();
 
     ledsInit();
     ledsSetState(LED_RED, 0);
@@ -164,7 +165,7 @@ static void blink(void) {
 #endif
 #ifdef CONFIG_SEND_SENSOR_DATA_IN_PER_ADV_DATA
         if (isAdvRunning) {
-            if (productionGetBme280Data(&temp, &press, &humidity)) {
+            if (sensorsGetBme280Data(&temp, &press, &humidity)) {
                 sensorData[0] = temp.val1;
                 sensorData[1] = temp.val2;
                 sensorData[2] = press.val1;
@@ -306,6 +307,6 @@ static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data, uint1
 
     LOG_INF("Received data from: %s", log_strdup(addr));
 
-    productionHandleCommand(data, len, nus_send_data);
+    atHostHandleCommand(data, len, nus_send_data);
 }
 #endif

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef __PRODUCTION_H
-#define __PRODUCTION_H
+#ifndef __AT_HOST_H
+#define __AT_HOST_H
 
 typedef void (*atOutput)(char* str);
 
@@ -25,9 +25,18 @@ typedef void (*atOutput)(char* str);
  *          If no valid command is sent within the first 10 seconds the UART will be disabled and no commands accepted.
  *          Once a valid AT command is sent the module, it will stay in test/configuration mode until reset, no 10 seconds limit.
  */
-int productionStart(void);
-bool productionHandleCommand(const uint8_t *const inAtBuf, uint32_t commandLen, atOutput output);
-bool productionGetBme280Data(struct sensor_value* temp, struct sensor_value* press, struct sensor_value* humidity);
+int atHostStart(void);
 
+/**
+ * @brief   Input an AT command to the AT command handler.
+ * @details Must be a full AT command as fragmented AT commands are not supported.
+ *          If it was a valid AT command it will be handled accordingly.
+ * 
+ * @param   inAtBuf     pointer to the full AT command
+ * @param   commandLen  The length of inAtBuf
+ * @param   output      Function where the output from AT command handler will be sent. May be called multiple times.
+ *                       Will not be called after atHostHandleCommand function exits.
+ */
+bool atHostHandleCommand(const uint8_t *const inAtBuf, uint32_t commandLen, atOutput output);
 
 #endif

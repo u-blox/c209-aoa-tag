@@ -20,6 +20,21 @@ menu "Zephyr Kernel"
 source "Kconfig.zephyr"
 endmenu
 
+menu "AoA Tag"
+    config SEND_SENSOR_DATA_IN_PER_ADV_DATA
+        bool
+    help
+        "Send periodic advertising data containing sensor data."
+    default y
+
+    config ALLOW_REMOTE_AT_OVER_NUS
+        bool
+    select BT_NUS
+    default y
+    help
+        "Add the NUS service and accept AT commands over it."
+endmenu
+
 module = APPLICATION_MODULE
 module-str = AoA Tag
 source "subsys/logging/Kconfig.template.log_config"

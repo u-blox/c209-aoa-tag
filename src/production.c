@@ -37,9 +37,6 @@
 #include "bt_adv.h"
 #include "production.h"
 
-#include <bluetooth/services/nus.h>
-#define STACKSIZE CONFIG_BT_NUS_THREAD_STACK_SIZE
-
 LOG_MODULE_REGISTER(production, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
 
@@ -192,7 +189,6 @@ void restartUartRxAfterError(struct k_work *item) {
     }
     resetUartAtBuffer();
 }
-
 
 static void uartRxHandler(uint8_t character)
 {

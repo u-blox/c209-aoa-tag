@@ -50,9 +50,6 @@ LOG_MODULE_REGISTER(app, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 // Comment out to disable this.
 #define ADV_RESTART_INTERVAL    (10 * 60 * 1000) // 10 min
 
-// Send BME280 in the periodic advertsiing data
-#define SEND_SENSOR_DATA_IN_PER_ADV_DATA
-
 static void btReadyCb(int err);
 static void onButtonPressCb(buttonPressType_t type);
 static void setTxPower(uint8_t handleType, uint16_t handle, int8_t txPwrLvl);
@@ -84,9 +81,7 @@ struct k_timer blinkTimer;
 static uint8_t bluetoothReady;
 static uint8_t uuid[EDDYSTONE_INSTANCE_ID_LEN];
 
-
 K_THREAD_DEFINE(blinkThreadId, BLINK_STACKSIZE, blink, NULL, NULL, NULL, BLINK_PRIORITY, 0, K_TICKS_FOREVER);
-
 
 void main(void)
 {
@@ -141,7 +136,7 @@ static void blink(void) {
     uint64_t currentTime;
     uint8_t randDelayMs;
 #endif
-#ifdef SEND_SENSOR_DATA_IN_PER_ADV_DATA
+#ifdef CONFIG_SEND_SENSOR_DATA_IN_PER_ADV_DATA
 #define NUM_SENSOR_DATA 6
     struct sensor_value temp, press, humidity;
     struct bt_data adData;
@@ -167,7 +162,7 @@ static void blink(void) {
             }
         }
 #endif
-#ifdef SEND_SENSOR_DATA_IN_PER_ADV_DATA
+#ifdef CONFIG_SEND_SENSOR_DATA_IN_PER_ADV_DATA
         if (isAdvRunning) {
             if (productionGetBme280Data(&temp, &press, &humidity)) {
                 sensorData[0] = temp.val1;

@@ -26,7 +26,9 @@
 #include <sys/byteorder.h>
 #include <sys/util.h>
 
+#if defined(CONFIG_BT_NUS)
 #include <bluetooth/services/nus.h>
+#endif
 
 LOG_MODULE_REGISTER(bt_adv_aoa, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
@@ -39,11 +41,10 @@ LOG_MODULE_REGISTER(bt_adv_aoa, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 */
 #define PER_ADV_EVENT_CTE_COUNT 1
 
-static void adv_sent_cb(struct bt_le_ext_adv *adv, struct bt_le_ext_adv_sent_info *info);
-
-static struct bt_le_ext_adv_cb adv_callbacks = {
-    .sent = adv_sent_cb,
-};
+// Offsets of the different data in bt_data ad[] below
+#define ADV_DATA_OFFSET_NAMESPACE   4
+#define ADV_DATA_OFFSET_INSTANCE    14
+#define ADV_DATA_OFFSET_TX_POWER    3
 
 static struct bt_le_ext_adv *adv_set;
 
@@ -56,11 +57,18 @@ static struct bt_le_adv_param param =
                      BT_GAP_ADV_FAST_INT_MAX_2 * 2, // 300ms
                      NULL);
 
+#if defined(CONFIG_BT_NUS)
 static struct bt_le_adv_param param_nus =
         BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_USE_NAME | BT_LE_ADV_OPT_CONNECTABLE,
                      BT_GAP_ADV_SLOW_INT_MIN,
                      BT_GAP_ADV_SLOW_INT_MAX,
                      NULL);
+
+static const struct bt_data ad_nus[] = {
+    BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
+    BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_UUID_NUS_VAL),
+};
+#endif
 
 static struct bt_le_ext_adv_start_param ext_adv_start_param = {
     .timeout = 0,
@@ -73,21 +81,6 @@ struct bt_df_adv_cte_tx_param cte_params = { .cte_len = CTE_LEN,
                          .num_ant_ids = 0,
                          .ant_ids = NULL
 };
-
-static void adv_sent_cb(struct bt_le_ext_adv *adv,
-            struct bt_le_ext_adv_sent_info *info)
-{
-    LOG_INF("Advertiser[%d] %p sent %d\n", bt_le_ext_adv_get_index(adv),
-           (void*)adv, info->num_sent);
-}
-
-static uint16_t minAdvInterval;
-static uint16_t maxAdvInterval;
-
-// Offsets of the different data in bt_data ad[] below
-#define ADV_DATA_OFFSET_NAMESPACE   4
-#define ADV_DATA_OFFSET_INSTANCE    14
-#define ADV_DATA_OFFSET_TX_POWER    3
 
 static struct bt_data ad[] = {
     BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_NO_BREDR),
@@ -103,10 +96,9 @@ static struct bt_data ad[] = {
     )
 };
 
-static const struct bt_data ad_nus[] = {
-    BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
-    BT_DATA_BYTES(BT_DATA_UUID128_ALL, BT_UUID_NUS_VAL),
-};
+
+static uint16_t minAdvInterval;
+static uint16_t maxAdvInterval;
 
 void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t* namespace, uint8_t* instance_id, int8_t txPower) {
     minAdvInterval = min_int / 1.25;
@@ -116,7 +108,7 @@ void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t* namespace, uint8_t* 
     memcpy((uint8_t*)&ad[2].data[ADV_DATA_OFFSET_INSTANCE], instance_id, EDDYSTONE_INSTANCE_ID_LEN);
     memcpy((uint8_t*)&ad[2].data[ADV_DATA_OFFSET_TX_POWER], &txPower, sizeof(txPower));
 
-    int err = bt_le_ext_adv_create(&param, &adv_callbacks, &adv_set);
+    int err = bt_le_ext_adv_create(&param, NULL, &adv_set);
     if (err) {
         LOG_ERR("failed (err %d)\n", err);
         return;
@@ -158,13 +150,14 @@ void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t* namespace, uint8_t* 
         return;
     }
     LOG_INF("success\n");
-
+#if defined(CONFIG_BT_NUS)
     LOG_INF("Legacy advertising NUS enable...");
     err = bt_le_adv_start(&param_nus, ad_nus, ARRAY_SIZE(ad_nus), NULL, 0);
     if (err) {
         printk("Advertising failed to start (err %d)\n", err);
         return;
     }
+#endif
     LOG_INF("success\n");
 }
 

@@ -23,14 +23,16 @@ endmenu
 menu "AoA Tag"
     config SEND_SENSOR_DATA_IN_PER_ADV_DATA
         bool
+    prompt "Sensor data in periodic adv data"
     help
         "Send periodic advertising data containing sensor data."
-    default y
+    default n
 
     config ALLOW_REMOTE_AT_OVER_NUS
         bool
+    prompt "Enable AT over NUS"
     select BT_NUS
-    default y
+    default n
     help
         "Add the NUS service and accept AT commands over it."
 endmenu

@@ -26,7 +26,6 @@
 #include <drivers/uart.h>
 #include <device.h>
 #include <drivers/sensor.h>
-#include <drivers/i2c.h>
 #include <pm/pm.h>
 #include <pm/device.h>
 #include <sys/reboot.h>
@@ -35,18 +34,14 @@
 #include "version_config.h"
 #include <logging/log.h>
 #include "bt_adv.h"
-#include "production.h"
+#include "at_host.h"
+#include "sensors.h"
 
-LOG_MODULE_REGISTER(production, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
+LOG_MODULE_REGISTER(at_host, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
 
 #define THREAD_STACKSIZE       1024
 #define THREAD_PRIORITY        7
-
-#define I2C_DEV DT_LABEL(DT_NODELABEL(i2c0))
-#define APDS_9306_065_ADDRESS   0x52
-#define APDS_9306_065_REG_ID    0x06
-#define APDS_9306_065_CHIP_ID   0xB3
 
 #define UART_RX_BUF_NUM	2
 #define UART_RX_LEN	    256
@@ -67,8 +62,8 @@ static bool testApds(void);
 static void uartCallback(const struct device *dev, struct uart_event *evt, void *user_data);
 static void doCommandWork(struct k_work *work);
 
-static void disableProdModeTimerCallback(struct k_timer *unused);
-void disableProductionMode(struct k_work *item);
+static void disableAtUartModeTimerCallback(struct k_timer *unused);
+void disableAtUartMode(struct k_work *item);
 void restartUartRxAfterError(struct k_work *item);
 
 static uint8_t uartRxBuf[UART_RX_BUF_NUM][UART_RX_LEN];
@@ -77,7 +72,7 @@ static uint8_t *pNextUartBuf = uartRxBuf[1];
 static uint8_t atBuf[AT_MAX_CMD_LEN];
 static size_t atBufLen;
 static struct k_work handleCommandWork;
-static struct k_work cancelProdWork;
+static struct k_work cancelUartAtWork;
 static struct k_work restartRxWork;
 static int uartErr = false;
 
@@ -91,21 +86,12 @@ static const struct uart_config uart_cfg = {
     .flow_ctrl = UART_CFG_FLOW_CTRL_NONE
 };
 
-K_TIMER_DEFINE(disableProdModeTimer, disableProdModeTimerCallback, NULL);
+K_TIMER_DEFINE(disableAtUartModeTimer, disableAtUartModeTimerCallback, NULL);
 
-int productionStart(void)
+int atHostStart(void)
 {
     int err;
     uint32_t start_time;
-
-    const struct device *bme_device = DEVICE_DT_GET_ANY(bosch_bme280);
-    // Power down to save power
-    if (bme_device != NULL) {
-        err = pm_device_action_run(bme_device, PM_DEVICE_ACTION_SUSPEND);
-        if (err != 0) {
-            LOG_ERR("bosch_bme280 suspend err: %d", err);
-        }
-    }
 
     pUartDev = device_get_binding(DT_LABEL(DT_NODELABEL(uart0)));
 
@@ -147,9 +133,9 @@ int productionStart(void)
 
     if (err == 0) {
         k_work_init(&handleCommandWork, doCommandWork);
-        k_work_init(&cancelProdWork, disableProductionMode);
+        k_work_init(&cancelUartAtWork, disableAtUartMode);
         k_work_init(&restartRxWork, restartUartRxAfterError);
-        k_timer_start(&disableProdModeTimer, K_SECONDS(10), K_NO_WAIT);
+        k_timer_start(&disableAtUartModeTimer, K_SECONDS(10), K_NO_WAIT);
     } else {
         LOG_ERR("uart_configure failed: %d", err);
         return -EFAULT;
@@ -159,13 +145,13 @@ int productionStart(void)
     return err;
 }
 
-void disableProductionMode(struct k_work *item)
+void disableAtUartMode(struct k_work *item)
 {
     int err;
-    LOG_DBG("Exit production mode, disabling UART\n");
+    LOG_DBG("Exit AT over UART mode, disabling UART\n");
     err = uart_rx_disable(pUartDev);
     if (err) {
-        LOG_ERR("disableProductionMode failed to stop rx, err: %d. Trying to disabe anyway.", err);
+        LOG_ERR("disableAtUartMode failed to stop rx, err: %d. Trying to disabe anyway.", err);
     }
     k_sleep(K_MSEC(100));
     err = pm_device_action_run(pUartDev, PM_DEVICE_ACTION_SUSPEND);
@@ -174,10 +160,10 @@ void disableProductionMode(struct k_work *item)
     }
 }
 
-static void disableProdModeTimerCallback(struct k_timer *unused)
+static void disableAtUartModeTimerCallback(struct k_timer *unused)
 {
     // Cannot disable inside of an ISR
-    k_work_submit(&cancelProdWork);
+    k_work_submit(&cancelUartAtWork);
 }
 
 void restartUartRxAfterError(struct k_work *item) {
@@ -230,7 +216,7 @@ static int validTxPowers(long txPower)
     return error;
 }
 
-bool productionHandleCommand(const uint8_t *const inAtBuf, uint32_t commandLen, atOutput outputRsp)
+bool atHostHandleCommand(const uint8_t *const inAtBuf, uint32_t commandLen, atOutput outputRsp)
 {
     bool validCommand = true;
     char outBuf[100];
@@ -345,10 +331,10 @@ static void doCommandWork(struct k_work *work)
     atBuf[MIN(atBufLen, AT_MAX_CMD_LEN - 1)] = 0;
     commandLen = strlen(atBuf);
 
-    validCommand = productionHandleCommand(atBuf, commandLen, sendString);
+    validCommand = atHostHandleCommand(atBuf, commandLen, sendString);
 
     if (validCommand) {
-        k_timer_stop(&disableProdModeTimer);
+        k_timer_stop(&disableAtUartModeTimer);
     }
 
     resetUartAtBuffer();
@@ -420,121 +406,20 @@ static void sendString(char* str)
 
 static bool testLis2dw(void)
 {
-    struct sensor_value acc_val[3];
-    const struct device *sensor = DEVICE_DT_GET_ANY(st_lis2dw12);
+    int16_t x;
+    int16_t y;
+    int16_t z;
 
-    if (sensor == NULL) {
-        LOG_ERR("Could not get %s devicen", DT_LABEL(DT_INST(0, st_lis2dw12)));
-        return false;
-    }
-
-    if (!device_is_ready(sensor)) {
-		LOG_ERR("Error: Device \"%s\" is not ready; "
-                "check the driver initialization logs for errors.",
-                sensor->name);
-		return false;
-	}
-
-    int err = sensor_sample_fetch(sensor);
-    if (err) {
-        LOG_ERR("Could not fetch sample from %s", sensor->name);
-        return false;
-    }
-    if (!err) {
-        sensor_channel_get(sensor, SENSOR_CHAN_ACCEL_XYZ, acc_val);
-        int16_t x_scaled = (int16_t)(sensor_value_to_double(&acc_val[0])*(32768/16));
-        int16_t y_scaled = (int16_t)(sensor_value_to_double(&acc_val[1])*(32768/16));
-        int16_t z_scaled = (int16_t)(sensor_value_to_double(&acc_val[2])*(32768/16));
-        LOG_INF("x: %d y: %d z: %d", x_scaled, y_scaled, z_scaled);
-    } else {
-        LOG_ERR("Failed fetching sample from %s", sensor->name);
-        return false;
-    }
-
-    return true;
+    return sensorsGetLis2dw12(&x, &y, &z);
 }
 
 static bool testBme280(void)
 {
     struct sensor_value temp, press, humidity;
-    return productionGetBme280Data(&temp, &press, &humidity);
-}
-
-bool productionGetBme280Data(struct sensor_value* temp, struct sensor_value* press, struct sensor_value* humidity)
-{
-	int err;
-    const struct device *sensor = DEVICE_DT_GET_ANY(bosch_bme280);
-
-	if (sensor == NULL) {
-		LOG_ERR("Error: no device found.");
-		return false;
-	}
-
-
-	if (!device_is_ready(sensor)) {
-		LOG_ERR("Error: Device \"%s\" is not ready; "
-		       "check the driver initialization logs for errors.",
-		       sensor->name);
-		return false;
-	}
-
-    err = pm_device_action_run(sensor, PM_DEVICE_ACTION_RESUME);
-    if (err != 0 && err != -EALREADY) {
-        LOG_ERR("Error: Could not resume from suspended state BME280");
-        return false;
-    }
-
-    err = sensor_sample_fetch(sensor);
-    if (!err) {
-        sensor_channel_get(sensor, SENSOR_CHAN_AMBIENT_TEMP, temp);
-        sensor_channel_get(sensor, SENSOR_CHAN_PRESS, press);
-        sensor_channel_get(sensor, SENSOR_CHAN_HUMIDITY, humidity);
-
-        LOG_DBG("temp: %d.%06d; press: %d.%06d; humidity: %d.%06d",
-                temp->val1, temp->val2, press->val1, press->val2,
-                humidity->val1, humidity->val2);
-    } else {
-        LOG_ERR("Failed fetching sample from %s", sensor->name);
-        return false;
-    }
-
-    err = pm_device_action_run(sensor, PM_DEVICE_ACTION_SUSPEND);
-    if (err != 0 && err != -EALREADY) {
-        LOG_ERR("Error: Could not PM_DEVICE_ACTION_SUSPEND from resumed state BME280");
-        return false;
-    }
-
-	return true;
+    return sensorsGetBme280Data(&temp, &press, &humidity);
 }
 
 static bool testApds(void)
 {
-    uint8_t id = 0;
-    const struct device *i2c_dev = device_get_binding(I2C_DEV);
-
-    if (i2c_dev == NULL) {
-		LOG_ERR("Error: no APDS device found.");
-		return false;
-	}
-
-	if (!device_is_ready(i2c_dev)) {
-		LOG_ERR("Error: Device \"%s\" is not ready; "
-		       "check the driver initialization logs for errors.",
-		       i2c_dev->name);
-		return false;
-	}
-
-    /* Verify sensor working by reading the ID */
-    int err = i2c_reg_read_byte(i2c_dev, APDS_9306_065_ADDRESS, APDS_9306_065_REG_ID, &id);
-    if (err) {
-        LOG_ERR("Failed reading device id from APDS");
-        return false;
-    }
-
-    if (id == APDS_9306_065_CHIP_ID) {
-        LOG_INF("APDS id: %d", id);
-        return true;
-    }
-
-    return false;
+    return sensorsDetectApds();
 }

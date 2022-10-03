@@ -37,7 +37,7 @@ LOG_MODULE_REGISTER(bt_adv_aoa, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 * Tradeoff with power consumption for the tag and
 * number of samples received at anchor.
 */
-#define PER_ADV_EVENT_CTE_COUNT 5
+#define PER_ADV_EVENT_CTE_COUNT 1
 
 static void adv_sent_cb(struct bt_le_ext_adv *adv, struct bt_le_ext_adv_sent_info *info);
 

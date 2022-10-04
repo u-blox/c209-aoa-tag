@@ -2,41 +2,45 @@
 This repository contains an example Tag application for use with u-blox C211 Bluetooth Direction Finding Anchor. It is intended to be flashed on the u-blox C209 Tag which comes bundled with a C211 in the XPLR-AOA-1 and XPLR-AOA-2 kits.
 
 # Getting the code
-`git clone repo_url`
+`git clone https://github.com/u-blox/c209-aoa-tag.git`
 
 # Setup
-## Building with command line
-- Open nRF Connect and open Toolchain Manager
-- Download nRF Connect SDK v2.0.0.
-- Right next to the "nRF Connect SDK v2.0.0" you have a dropdown, click "Open bash". This step is not required, but it will set up the necessary environment variables for you.
+Below is a short summary of the required steps to compile the application.
+For more detailed instructions go to the offical [nRF Connect Getting Started Guide](https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/nrf/getting_started.html)
+
+## Download nRF Connect and Toolchain
+- Open nRF Connect for Desktop and open the Toolchain Manager.
+- Download nRF Connect SDK v2.1.0.
+
+### Building with nRF Connect VSCode plugin
+- In Visual Studio Code go to marketplace and search for "nrf connect".
+- Install the nRF Connect Extension Pack (this will install all required extensions at once).
+- Click on the nRF Connect extention and select "Add an existing application"
+- Choose the folder c209-aoa-tag (or the folder name you choose when cloning this repository).
+- Press CTRL+SHIFT+P and search/select "nRF Connect: Select nRF Connect SDK"
+- Press "Yes" in the popup asking if you want to change it.
+- In the dropdown you should see the path where nRF Connect was installed before. Choose it.
+- Under "applications" press "No build configurations Click to create one".
+- Choose all boards and select ubx_evkninab4_nrf52833 in the drowdown.
+- Press "Build Configuration" button.
+- Now project should build successfully.
+
+### Building with command line
+- Open nRF Connect for Desktops Toolchain Manager.
+- Right next to the "nRF Connect SDK v2.1.0" you have a dropdown, click "Open bash". This step is not required, but it will set up the necessary environment variables for you.
 - `cd` to project folder
 - `west build -b ubx_evkninab4_nrf52833`
 - `west flash`
-- `west flash` only should be enough for building + flashing after that, specifying the board is only needed on the first build.
-
-## Building nRF Connect VS Code plugin
-In Visual Studio Code go to marketplace and search for "nrf connect"
-Install the nRF Connect Extension Pack (this will install all required extensions at once)
-
-In VS Code:
-- Click on the nRF Connect extention and select "Add an existing application"
-- Choose the folder c209-aoa-tag
-- Press ctrl+shift+p and search/select "nRF Connect: Select nRF Connect SDK"
-- Press "Yes" in the popup asking if you want to change it
-- In the dropdown you should see the path where nRF Connect was installed before. Choose it.
-- Under "applications" press in "No build configurations Click to create one"
-- Choose custom board and select ubx_evkninab4_nrf52833 in the drowdown
-- Press "Build Configuration" button
-- Now project should build successfully
+- `west flash` only will be enough for building + flashing after that, specifying the board is only needed on the first build.
 
 ## Release vs. Debug build
 The `prj.conf` is split into multiple files, first there is `prj_base.conf` and that contains all common config for both release and debug.
-Then there are `prj_debug.conf` and `prj_release.conf`, these contain configurations specific to debug or release, for example compiler optimization level and logging config. By default a debug build is made, to build release run `west build -p -b ubx_evkninab4_nrf52833 -- -DRELEASE`. Those options can also be input when adding the application in the nRF Connect VS Code plugin under "Extra CMake arguments".
+Then there are `prj_debug.conf` and `prj_release.conf`, these contain configurations specific to debug or release, for example compiler optimization level and logging config. By default a debug build is made, to build release run `west build -p -b ubx_evkninab4_nrf52833 -- -DRELEASE=1`. Those options can also be input when adding the application in the nRF Connect VS Code plugin under "Extra CMake arguments".
 
 ## Running on other boards
 This sample application primarily supports the u-blox **C209** application board bundled together with the u-blox **C211** in the **XPLR-AOA-1**.
 
-However getting it up and running on other boards which either use NINA-B4 module (like **NINA-B4-EVK**) or a bare NRF52833 should only be a matter of selecting the appropriate board file.
+However getting it up and running on other boards which either use NINA-B4 module (like **NINA-B4-EVK**) or a NRF52833 DK is only a matter of selecting the appropriate board file.
 
 ## Building the application to use with OpenCPU DFU Bootloader
 C209 boards come pre flashed with a DFU bootloader. To build a binary that is compatible with that the `CONFIG_FLASH_BASE_ADDRESS` needs to be changed. If the pre-flashed bootloader has been erased or overwritten then flash the dfu_bootloader/mbr_nrf52_2.4.1_mbr.hex and dfu_bootloader/nrf52833_xxaa_bootloader.hex using using J-Flash Lite/nrfjprog or similar tool to restore it. See the following complete steps to build and flash.
@@ -50,17 +54,17 @@ C209 boards come pre flashed with a DFU bootloader. To build a binary that is co
 
 `nrfutil` executable for flashing with OpenCPU DFU Bootloader can be downloaded from here: https://github.com/NordicSemiconductor/pc-nrfutil/releases 
 
-# Communication with AT commands
+# Communication using AT commands
 In `src/at_host` there is a __very__ basic AT command handler.
 # Over UART
 When the application boots it will accept AT commands over the UART for 10s before it shuts off the UART in order to save power.
-If a successful AT command was sent within 10s the application will keep UART enabled until it's reset.
-## Over NUS
-If Kconfig `CONFIG_SEND_SENSOR_DATA_IN_PER_ADV_DATA` is enabled (default yes) then the application will accept AT commands over the Nordic UART Service.
+If a successful AT command was sent within 10 seconds the application will keep UART enabled until it's reset.
+## Over BLE (Nordic UART Service)
+If Kconfig `CONFIG_ALLOW_REMOTE_AT_OVER_NUS` is enabled (default yes) then the application will accept AT commands over the Nordic UART Service.
 Each write will be parsed as an AT command so no need for line termination characters etc.
 
 # Using the Sensors on the C209
-The C209 application board comes with some sensors. Study `src/sensors.c` for example how to get data from the sensors.
+The C209 application board comes with some sensors. Study `src/sensors.c` for example how to get data from the sensors. If `CONFIG_SEND_SENSOR_DATA_IN_PER_ADV_DATA` is enabled (default y) then sensor data from the BME280 will be sent in the periodic advertising data.
 
 # Code formatting and style
 Code formatting and style follows [ubxlib](https://github.com/u-blox/ubxlib/blob/master/astyle.cfg).

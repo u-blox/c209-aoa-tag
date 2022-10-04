@@ -43,7 +43,7 @@ This sample application primarily supports the u-blox **C209** application board
 However getting it up and running on other boards which either use NINA-B4 module (like **NINA-B4-EVK**) or a NRF52833 DK is only a matter of selecting the appropriate board file.
 
 ## Building the application to use with OpenCPU DFU Bootloader
-C209 boards come pre flashed with a DFU bootloader. To build a binary that is compatible with that the `CONFIG_FLASH_BASE_ADDRESS` needs to be changed. If the pre-flashed bootloader has been erased or overwritten then flash the dfu_bootloader/mbr_nrf52_2.4.1_mbr.hex and dfu_bootloader/nrf52833_xxaa_bootloader.hex using using J-Flash Lite/nrfjprog or similar tool to restore it. See the following complete steps to build and flash.
+C209 boards come pre flashed with a DFU bootloader. To build a binary that is compatible with that add `-DNRF_DFU_BOOT_SUPPORT=1` to build arguments. If the pre-flashed bootloader has been erased or overwritten then flash the dfu_bootloader/mbr_nrf52_2.4.1_mbr.hex and dfu_bootloader/nrf52833_xxaa_bootloader.hex using using J-Flash Lite/nrfjprog or similar tool to restore it. See the following complete steps to build and flash.
 - In menuconfig change "Flash Base Address" from 0x0 to 0x1000 (or uncomment CONFIG_FLASH_BASE_ADDRESS=0x1000 in prj_base.conf)
 - Re-Run CMAKE and re-build
 - Copy the zephyr.bin file from build/zephyr folder to dfu_bootloader.

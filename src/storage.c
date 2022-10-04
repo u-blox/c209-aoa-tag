@@ -38,8 +38,14 @@ int storageInit(void)
      *  starting at FLASH_AREA_OFFSET(storage)
      */
     fs.offset = FLASH_AREA_OFFSET(storage);
+    fs.flash_device = FLASH_AREA_DEVICE(storage);
+    if (!device_is_ready(fs.flash_device)) {
+        LOG_ERR("Flash device %s is not ready\n", fs.flash_device->name);
+        return -1;
+    }
+
     rc = flash_get_page_info_by_offs(
-             device_get_binding(DT_CHOSEN_ZEPHYR_FLASH_CONTROLLER_LABEL),
+             fs.flash_device,
              fs.offset, &info);
     if (rc) {
         LOG_ERR("Unable to get page info");
@@ -48,11 +54,11 @@ int storageInit(void)
     fs.sector_size = info.size;
     fs.sector_count = FLASH_AREA_SIZE(storage) / info.size;
 
-    rc = nvs_init(&fs, DT_CHOSEN_ZEPHYR_FLASH_CONTROLLER_LABEL);
+    rc = nvs_mount(&fs);
     if (rc) {
         LOG_ERR("Flash Init failed, trying to erase nvs flash sectors");
         if (flash_erase(fs.flash_device, fs.offset, fs.sector_size * fs.sector_count) == 0) {
-            rc = nvs_init(&fs, DT_CHOSEN_ZEPHYR_FLASH_CONTROLLER_LABEL);
+            rc = nvs_mount(&fs);
         } else {
             LOG_ERR("Flash erase failed after fail of init nvs");
         }

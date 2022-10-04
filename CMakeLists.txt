@@ -55,5 +55,4 @@ add_definitions("-DBUILD_TIME=${BUILD_TIME}")
 configure_file(version_config.h.in ${CMAKE_BINARY_DIR}/generated/version_config.h)
 include_directories( ${CMAKE_BINARY_DIR}/generated/)
 
-#target_compile_options(app PRIVATE -Wall -Werror -Wno-stringop-truncationw)
-target_compile_options(app PRIVATE -Wno-stringop-truncationw)
+target_compile_options(app PRIVATE -Wall -Werror -Wno-stringop-truncationw)

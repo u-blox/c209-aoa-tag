@@ -23,7 +23,7 @@
 
 LOG_MODULE_REGISTER(sensors, LOG_LEVEL_DBG);
 
-#define I2C_DEV DT_LABEL(DT_NODELABEL(i2c0))
+#define I2C_DEV DT_NODELABEL(i2c0)
 
 #define APDS_9306_065_ADDRESS   0x52
 #define APDS_9306_065_REG_ID    0x06
@@ -131,7 +131,7 @@ bool sensorsGetLis2dw12(int16_t *x, int16_t *y, int16_t *z)
 bool sensorsDetectApds(void)
 {
     uint8_t id = 0;
-    const struct device *i2c_dev = device_get_binding(I2C_DEV);
+    const struct device *i2c_dev = DEVICE_DT_GET_OR_NULL(I2C_DEV);
 
     if (i2c_dev == NULL) {
         LOG_ERR("Error: no APDS device found.");

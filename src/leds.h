@@ -24,7 +24,7 @@ typedef enum leds_t {
     LED_RED = 0,
     LED_GREEN,
     LED_BLUE,
-    LED_LAST = LED_BLUE
+    LED_END
 } leds_t;
 
 

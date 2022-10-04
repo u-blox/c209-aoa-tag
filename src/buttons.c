@@ -25,14 +25,8 @@
 
 LOG_MODULE_REGISTER(buttons, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
-#define SW2_NODE                DT_ALIAS(sw1)
-#define BUTTON_SW2_PIN_PORT     DT_GPIO_LABEL(SW2_NODE, gpios)
-#define BUTTON_SW2_PIN          DT_GPIO_PIN(SW2_NODE, gpios)
-#define SW2_GPIO_FLAGS          (GPIO_INPUT | DT_GPIO_FLAGS(SW2_NODE, gpios))
-
 #define STACKSIZE               1024
 #define PRIORITY                7
-
 
 #define BTN_LONG_PRESS_LIMIT  1000
 
@@ -41,7 +35,10 @@ static void handleButtonThread(void);
 
 static buttonHandlerCallback_t callback;
 static struct gpio_callback buttonCallbackData;
-static const struct device *button;
+static const struct gpio_dt_spec button = GPIO_DT_SPEC_GET_OR(DT_ALIAS(sw1), gpios, {
+                                                                  0
+                                                              });
+
 static struct k_sem btnSem;
 static int buttonCount = 0;
 
@@ -53,31 +50,30 @@ void buttonsInit(buttonHandlerCallback_t handler)
 {
     callback = handler;
 
-    button = device_get_binding(BUTTON_SW2_PIN_PORT);
-    if (button == NULL) {
-        LOG_ERR("Error: didn't find %s device", BUTTON_SW2_PIN_PORT);
+    if (!device_is_ready(button.port)) {
+        LOG_ERR("Error: didn't find button device");
         return;
     }
 
-    int ret = gpio_pin_configure(button, BUTTON_SW2_PIN, GPIO_INPUT | GPIO_PULL_UP);
+    int ret = gpio_pin_configure_dt(&button, GPIO_INPUT | GPIO_PULL_UP);
     if (ret != 0) {
-        LOG_ERR("Error %d: failed to configure %s pin %d", ret, BUTTON_SW2_PIN_PORT, BUTTON_SW2_PIN);
+        LOG_ERR("Error %d: failed to configure %s pin %d", ret, button.port->name, button.pin);
         return;
     }
 
     k_sem_init(&btnSem, 0, 1);
     k_thread_start(buttonThreadId);
-    gpio_init_callback(&buttonCallbackData, buttonPressedIsr, BIT(BUTTON_SW2_PIN));
-    gpio_add_callback(button, &buttonCallbackData);
-    gpio_pin_interrupt_configure(button, BUTTON_SW2_PIN, GPIO_INT_EDGE_TO_INACTIVE);
-    LOG_INF("Set up button at %s pin %d", BUTTON_SW2_PIN_PORT, BUTTON_SW2_PIN);
+    gpio_init_callback(&buttonCallbackData, buttonPressedIsr, BIT(button.pin));
+    gpio_add_callback(button.port, &buttonCallbackData);
+    gpio_pin_interrupt_configure_dt(&button, GPIO_INT_EDGE_TO_ACTIVE);
+    LOG_INF("Set up button at %s pin %d", button.port->name, button.pin);
 }
 
 static void buttonPressedIsr(const struct device *dev, struct gpio_callback *cb, uint32_t pins)
 {
     uint32_t val;
-    gpio_remove_callback(button, &buttonCallbackData);
-    val = gpio_pin_get(button, BUTTON_SW2_PIN);
+    gpio_remove_callback(button.port, &buttonCallbackData);
+    val = gpio_pin_get_dt(&button);
     k_sem_give(&btnSem);
 }
 
@@ -93,11 +89,11 @@ static void handleButtonThread(void)
         ret = k_sem_take(&btnSem, K_FOREVER);
         assert(ret == 0);
         btn_press_start_ms = k_uptime_get_32();
-        k_sleep(K_MSEC(100)); // Let debounce stabalize
-        val = gpio_pin_get(button, BUTTON_SW2_PIN);
+        k_sleep(K_MSEC(100)); // Let debounce stabilize
+        val = gpio_pin_get_dt(&button);
 
-        while (!val) {
-            val = gpio_pin_get(button, BUTTON_SW2_PIN);
+        while (val) {
+            val = gpio_pin_get_dt(&button);
             k_sleep(K_MSEC(10));
         }
 
@@ -111,6 +107,6 @@ static void handleButtonThread(void)
             press_type = BUTTONS_LONG_PRESS;
         }
         callback(press_type);
-        gpio_add_callback(button, &buttonCallbackData);
+        gpio_add_callback(button.port, &buttonCallbackData);
     }
 }

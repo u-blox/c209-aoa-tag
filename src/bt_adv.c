@@ -46,8 +46,6 @@ LOG_MODULE_REGISTER(bt_adv_aoa, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 #define ADV_DATA_OFFSET_INSTANCE    14
 #define ADV_DATA_OFFSET_TX_POWER    3
 
-static struct bt_le_ext_adv *adv_set;
-
 static struct bt_le_adv_param param =
 // Below intervals are a tradeoff between power consumption and the time
 // it takes for the scanner to start tracking this tag. Set it accordingly.
@@ -89,14 +87,14 @@ static struct bt_data ad[] = {
                   0xaa, 0xfe, /* Eddystone UUID */
                   0x00, /* Eddystone-UID frame type */
                   0x00, /* TX Power */
-                  'N', 'I', 'N', 'A', '-', 'B', '4', 'T', 'A', 'G', /* Namespace */
-                  'i', 'n', 's', 't', 'a', 'e', /* Instance Id */
+                  'N', 'I', 'N', 'A', '-', 'B', '4', 'T', 'A', 'G', /* Namespace placeholder, will be replaced in init */
+                  'i', 'n', 's', 't', 'a', 'e', /* Instance Id placeholder, will be replaced in init */
                   0x00, /* reserved */
                   0x00 /* reserved */
                  )
 };
 
-
+static struct bt_le_ext_adv *adv_set;
 static uint16_t minAdvInterval;
 static uint16_t maxAdvInterval;
 

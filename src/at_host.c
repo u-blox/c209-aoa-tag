@@ -93,9 +93,9 @@ int atHostStart(void)
     int err;
     uint32_t start_time;
 
-    pUartDev = device_get_binding(DT_LABEL(DT_NODELABEL(uart0)));
+    pUartDev = DEVICE_DT_GET_OR_NULL(DT_NODELABEL(uart0));
 
-    if (!pUartDev) {
+    if (!device_is_ready(pUartDev)) {
         LOG_ERR("Cannot get UART device");
         return -EFAULT;
     }

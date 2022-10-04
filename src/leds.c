@@ -38,7 +38,7 @@
 
 
 struct ledCfg_t {
-    const struct device* dev;
+    const struct device *dev;
     uint8_t pin;
     uint8_t state;
 };
@@ -52,26 +52,29 @@ static struct LedsState_s state;
 
 void ledsInit(void)
 {
-    const struct device* dev;
+    const struct device *dev;
     memset(&state, 0, sizeof(state));
 
     dev = device_get_binding(RED_LED_PIN_PORT);
     __ASSERT_NO_MSG(dev != NULL);
     state.leds[LED_RED].dev = dev;
     state.leds[LED_RED].pin = RED_LED_PIN;
-    __ASSERT_NO_MSG(gpio_pin_configure(state.leds[LED_RED].dev, state.leds[LED_RED].pin, GPIO_OUTPUT | GPIO_OUTPUT_HIGH) == 0);
+    __ASSERT_NO_MSG(gpio_pin_configure(state.leds[LED_RED].dev, state.leds[LED_RED].pin,
+                                       GPIO_OUTPUT | GPIO_OUTPUT_HIGH) == 0);
 
     dev = device_get_binding(GREEN_LED_PIN_PORT);
     __ASSERT_NO_MSG(dev != NULL);
     state.leds[LED_GREEN].dev = dev;
     state.leds[LED_GREEN].pin = GREEN_LED_PIN;
-    __ASSERT_NO_MSG(gpio_pin_configure(state.leds[LED_GREEN].dev, state.leds[LED_GREEN].pin, GPIO_OUTPUT | GPIO_OUTPUT_HIGH) == 0);
+    __ASSERT_NO_MSG(gpio_pin_configure(state.leds[LED_GREEN].dev, state.leds[LED_GREEN].pin,
+                                       GPIO_OUTPUT | GPIO_OUTPUT_HIGH) == 0);
 
     dev = device_get_binding(BLUE_LED_PIN_PORT);
     __ASSERT_NO_MSG(dev != NULL);
     state.leds[LED_BLUE].dev = dev;
     state.leds[LED_BLUE].pin = BLUE_LED_PIN;
-    __ASSERT_NO_MSG(gpio_pin_configure(state.leds[LED_BLUE].dev, state.leds[LED_BLUE].pin, GPIO_OUTPUT | GPIO_OUTPUT_HIGH) == 0);
+    __ASSERT_NO_MSG(gpio_pin_configure(state.leds[LED_BLUE].dev, state.leds[LED_BLUE].pin,
+                                       GPIO_OUTPUT | GPIO_OUTPUT_HIGH) == 0);
 
     state.initialized = true;
 }
@@ -93,9 +96,9 @@ void ledsToggle(leds_t led)
     __ASSERT_NO_MSG(led <= LED_LAST);
 
     if (state.leds[led].state == 0) {
-    state.leds[led].state = 1;
+        state.leds[led].state = 1;
     } else {
-    state.leds[led].state = 0;
+        state.leds[led].state = 0;
     }
 
     __ASSERT_NO_MSG(gpio_pin_set(state.leds[led].dev, state.leds[led].pin, state.leds[led].state) == 0);

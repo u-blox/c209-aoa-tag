@@ -21,7 +21,7 @@
 
 #define EMPTY_REGISTER  0xFFFFFFFF
 
-void utilGetBtAddr(bt_addr_le_t* addr)
+void utilGetBtAddr(bt_addr_le_t *addr)
 {
     if (NRF_UICR->CUSTOMER[0] != EMPTY_REGISTER || NRF_UICR->CUSTOMER[1] != EMPTY_REGISTER) {
         addr->a.val[0] = (uint8_t)(NRF_UICR->CUSTOMER[1] >> 8);
@@ -33,12 +33,12 @@ void utilGetBtAddr(bt_addr_le_t* addr)
 
         addr->type = BT_ADDR_LE_PUBLIC;
     } else {
-        *((uint8_t*)addr->a.val + 0) = (uint8_t)((NRF_FICR->DEVICEADDR[1] >> 8) | 0xC0);
-        *((uint8_t*)addr->a.val + 1) = (uint8_t)NRF_FICR->DEVICEADDR[1];
-        *((uint8_t*)addr->a.val + 2) = (uint8_t)(NRF_FICR->DEVICEADDR[0] >> 24);
-        *((uint8_t*)addr->a.val + 3) = (uint8_t)(NRF_FICR->DEVICEADDR[0] >> 16);
-        *((uint8_t*)addr->a.val + 4) = (uint8_t)(NRF_FICR->DEVICEADDR[0] >> 8);
-        *((uint8_t*)addr->a.val + 5) = (uint8_t)(NRF_FICR->DEVICEADDR[0]);
+        *((uint8_t *)addr->a.val + 0) = (uint8_t)((NRF_FICR->DEVICEADDR[1] >> 8) | 0xC0);
+        *((uint8_t *)addr->a.val + 1) = (uint8_t)NRF_FICR->DEVICEADDR[1];
+        *((uint8_t *)addr->a.val + 2) = (uint8_t)(NRF_FICR->DEVICEADDR[0] >> 24);
+        *((uint8_t *)addr->a.val + 3) = (uint8_t)(NRF_FICR->DEVICEADDR[0] >> 16);
+        *((uint8_t *)addr->a.val + 4) = (uint8_t)(NRF_FICR->DEVICEADDR[0] >> 8);
+        *((uint8_t *)addr->a.val + 5) = (uint8_t)(NRF_FICR->DEVICEADDR[0]);
         addr->type = BT_ADDR_LE_RANDOM;
     }
 }

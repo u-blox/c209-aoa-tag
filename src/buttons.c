@@ -26,7 +26,7 @@
 LOG_MODULE_REGISTER(buttons, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
 #define SW2_NODE                DT_ALIAS(sw1)
-#define BUTTON_SW2_PIN_PORT	    DT_GPIO_LABEL(SW2_NODE, gpios)
+#define BUTTON_SW2_PIN_PORT     DT_GPIO_LABEL(SW2_NODE, gpios)
 #define BUTTON_SW2_PIN          DT_GPIO_PIN(SW2_NODE, gpios)
 #define SW2_GPIO_FLAGS          (GPIO_INPUT | DT_GPIO_FLAGS(SW2_NODE, gpios))
 
@@ -45,10 +45,12 @@ static const struct device *button;
 static struct k_sem btnSem;
 static int buttonCount = 0;
 
-K_THREAD_DEFINE(buttonThreadId, STACKSIZE, handleButtonThread, NULL, NULL, NULL, PRIORITY, 0, K_TICKS_FOREVER);
+K_THREAD_DEFINE(buttonThreadId, STACKSIZE, handleButtonThread, NULL, NULL, NULL, PRIORITY, 0,
+                K_TICKS_FOREVER);
 
 
-void buttonsInit(buttonHandlerCallback_t handler) {
+void buttonsInit(buttonHandlerCallback_t handler)
+{
     callback = handler;
 
     button = device_get_binding(BUTTON_SW2_PIN_PORT);
@@ -79,7 +81,8 @@ static void buttonPressedIsr(const struct device *dev, struct gpio_callback *cb,
     k_sem_give(&btnSem);
 }
 
-static void handleButtonThread(void) {
+static void handleButtonThread(void)
+{
     int ret;
     uint32_t val;
     int64_t btn_press_start_ms;

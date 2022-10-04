@@ -17,7 +17,7 @@
 #ifndef __AT_HOST_H
 #define __AT_HOST_H
 
-typedef void (*atOutput)(char* str);
+typedef void (*atOutput)(char *str);
 
 /**
  * @brief   Init the test and configuration UART interface.
@@ -31,7 +31,7 @@ int atHostStart(void);
  * @brief   Input an AT command to the AT command handler.
  * @details Must be a full AT command as fragmented AT commands are not supported.
  *          If it was a valid AT command it will be handled accordingly.
- * 
+ *
  * @param   inAtBuf     pointer to the full AT command
  * @param   commandLen  The length of inAtBuf
  * @param   output      Function where the output from AT command handler will be sent. May be called multiple times.

@@ -59,7 +59,7 @@ static void blink(void);
 #if defined(CONFIG_BT_NUS)
 static void connected(struct bt_conn *conn, uint8_t err);
 static void disconnected(struct bt_conn *conn, uint8_t reason);
-static void nus_send_data(char* data);
+static void nus_send_data(char *data);
 static void bt_receive_cb(struct bt_conn *conn, const uint8_t *const data, uint16_t len);
 BT_CONN_CB_DEFINE(conn_callbacks) = {
     .connected    = connected,
@@ -76,13 +76,14 @@ static struct bt_nus_cb nus_cb = {
 static bool isAdvRunning = true;
 static uint16_t advIntervals[NUM_ADV_INTERVALS] = {50, 100, 1000};
 static uint8_t advIntervalIndex = 0;
-static char* pDefaultGroupNamespace = "NINA-B4TAG";
+static char *pDefaultGroupNamespace = "NINA-B4TAG";
 
 struct k_timer blinkTimer;
 static uint8_t bluetoothReady;
 static uint8_t uuid[EDDYSTONE_INSTANCE_ID_LEN];
 
-K_THREAD_DEFINE(blinkThreadId, BLINK_STACKSIZE, blink, NULL, NULL, NULL, BLINK_PRIORITY, 0, K_TICKS_FOREVER);
+K_THREAD_DEFINE(blinkThreadId, BLINK_STACKSIZE, blink, NULL, NULL, NULL, BLINK_PRIORITY, 0,
+                K_TICKS_FOREVER);
 
 void main(void)
 {
@@ -102,7 +103,7 @@ void main(void)
     // Only swap public address. It's done like this in u-connect.
     if (addr.type == BT_ADDR_LE_PUBLIC) {
         for (uint8_t i = 0; i < EDDYSTONE_INSTANCE_ID_LEN; i++) {
-            uuid[i] = addr.a.val[(EDDYSTONE_INSTANCE_ID_LEN-1) - i];
+            uuid[i] = addr.a.val[(EDDYSTONE_INSTANCE_ID_LEN - 1) - i];
         }
     } else {
         memcpy(uuid, addr.a.val, MAC_ADDR_LEN);
@@ -130,7 +131,8 @@ void main(void)
     k_thread_start(blinkThreadId);
 }
 
-static void blink(void) {
+static void blink(void)
+{
     LOG_INF("Started blink thread");
 #ifdef ADV_RESTART_INTERVAL
     uint64_t lastAdvRestartMs = k_uptime_get();
@@ -173,7 +175,7 @@ static void blink(void) {
                 sensorData[4] = humidity.val1;
                 sensorData[5] = humidity.val2;
                 adData.type = BT_DATA_MANUFACTURER_DATA;
-                adData.data = (uint8_t*)sensorData;
+                adData.data = (uint8_t *)sensorData;
                 adData.data_len = sizeof(int32_t) * NUM_SENSOR_DATA;
                 btAdvSetPerAdvData(&adData, 1);
             }
@@ -195,11 +197,13 @@ static void btReadyCb(int err)
     LOG_INF("Setting TxPower: %d", txPower);
     setTxPower(BT_HCI_VS_LL_HANDLE_TYPE_ADV, 0, txPower);
 
-    btAdvInit(advIntervals[advIntervalIndex], advIntervals[advIntervalIndex], pDefaultGroupNamespace, uuid, txPower);
+    btAdvInit(advIntervals[advIntervalIndex], advIntervals[advIntervalIndex], pDefaultGroupNamespace,
+              uuid, txPower);
     btAdvStart();
 }
 
-static void onButtonPressCb(buttonPressType_t type) {
+static void onButtonPressCb(buttonPressType_t type)
+{
     LOG_INF("Pressed, type: %d", type);
 
     if (type == BUTTONS_SHORT_PRESS) {
@@ -247,11 +251,11 @@ static void setTxPower(uint8_t handleType, uint16_t handle, int8_t txPwrLvl)
     cp->tx_power_level = txPwrLvl;
 
     err = bt_hci_cmd_send_sync(BT_HCI_OP_VS_WRITE_TX_POWER_LEVEL,
-                     buf, &rsp);
+                               buf, &rsp);
     if (err) {
         uint8_t reason = rsp ?
-            ((struct bt_hci_rp_vs_write_tx_power_level *)
-                rsp->data)->status : 0;
+                         ((struct bt_hci_rp_vs_write_tx_power_level *)
+                          rsp->data)->status : 0;
         LOG_ERR("Set Tx power err: %d reason 0x%02x", err, reason);
         return;
     }
@@ -291,9 +295,9 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
     }
 }
 
-static void nus_send_data(char* data)
+static void nus_send_data(char *data)
 {
-    int err = bt_nus_send(current_conn, (uint8_t*)data, strlen(data));
+    int err = bt_nus_send(current_conn, (uint8_t *)data, strlen(data));
     if (err) {
         LOG_WRN("Failed to send data over BLE connection, err: %d", err);
     }

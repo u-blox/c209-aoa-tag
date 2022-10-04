@@ -43,8 +43,8 @@ LOG_MODULE_REGISTER(at_host, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 #define THREAD_STACKSIZE       1024
 #define THREAD_PRIORITY        7
 
-#define UART_RX_BUF_NUM	2
-#define UART_RX_LEN	    256
+#define UART_RX_BUF_NUM 2
+#define UART_RX_LEN     256
 #define UART_RX_TIMEOUT 1
 #define AT_MAX_CMD_LEN  100
 #define OK_STR          "\r\nOK\r\n"
@@ -53,7 +53,7 @@ LOG_MODULE_REGISTER(at_host, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 K_THREAD_STACK_DEFINE(threadStack, THREAD_STACKSIZE);
 
 static void resetUartAtBuffer(void);
-static void sendString(char* str);
+static void sendString(char *str);
 
 static bool testLis2dw(void);
 static bool testBme280(void);
@@ -107,7 +107,7 @@ int atHostStart(void)
         if (err) {
             if (k_uptime_get_32() - start_time > 1000) {
                 LOG_ERR("UART check failed: %d. "
-                    "UART initialization timed out.", err);
+                        "UART initialization timed out.", err);
                 return -EIO;
             }
         }
@@ -166,7 +166,8 @@ static void disableAtUartModeTimerCallback(struct k_timer *unused)
     k_work_submit(&cancelUartAtWork);
 }
 
-void restartUartRxAfterError(struct k_work *item) {
+void restartUartRxAfterError(struct k_work *item)
+{
     LOG_INF("restartUartRxAfterError");
     int err = 1;
     err = uart_rx_enable(pUartDev, uartRxBuf[0], sizeof(uartRxBuf[0]), UART_RX_TIMEOUT);
@@ -192,7 +193,7 @@ static int validTxPowers(long txPower)
 {
     int error = -EINVAL;
 
-    switch(txPower){
+    switch (txPower) {
         case -40:
         case -30:
         case -20:
@@ -357,37 +358,37 @@ static void uartCallback(const struct device *dev, struct uart_event *evt, void 
     ARG_UNUSED(user_data);
 
     switch (evt->type) {
-    case UART_TX_DONE:
-        break;
-    case UART_TX_ABORTED:
-        break;
-    case UART_RX_RDY:
-        for (int i = pos; i < (pos + evt->data.rx.len); i++) {
-            uartRxHandler(evt->data.rx.buf[i]);
-        }
-        pos += evt->data.rx.len;
-        break;
-    case UART_RX_BUF_REQUEST:
-        pos = 0;
-        err = uart_rx_buf_rsp(pUartDev, pNextUartBuf, sizeof(uartRxBuf[0]));
-        if (err) {
-            LOG_ERR("UART RX buf rsp: %d", err);
-        }
-        break;
-    case UART_RX_BUF_RELEASED:
-        pNextUartBuf = evt->data.rx_buf.buf;
-        break;
-    case UART_RX_STOPPED:
-        uartErr = evt->data.rx_stop.reason;
-        break;
-    case UART_RX_DISABLED:
-        if (uartErr != 0) {
-            uartErr = 0;
-            k_work_submit(&restartRxWork);
-        }
-        break;
-    default:
-        break;
+        case UART_TX_DONE:
+            break;
+        case UART_TX_ABORTED:
+            break;
+        case UART_RX_RDY:
+            for (int i = pos; i < (pos + evt->data.rx.len); i++) {
+                uartRxHandler(evt->data.rx.buf[i]);
+            }
+            pos += evt->data.rx.len;
+            break;
+        case UART_RX_BUF_REQUEST:
+            pos = 0;
+            err = uart_rx_buf_rsp(pUartDev, pNextUartBuf, sizeof(uartRxBuf[0]));
+            if (err) {
+                LOG_ERR("UART RX buf rsp: %d", err);
+            }
+            break;
+        case UART_RX_BUF_RELEASED:
+            pNextUartBuf = evt->data.rx_buf.buf;
+            break;
+        case UART_RX_STOPPED:
+            uartErr = evt->data.rx_stop.reason;
+            break;
+        case UART_RX_DISABLED:
+            if (uartErr != 0) {
+                uartErr = 0;
+                k_work_submit(&restartRxWork);
+            }
+            break;
+        default:
+            break;
     }
 }
 
@@ -397,7 +398,7 @@ static void resetUartAtBuffer(void)
     atBufLen = 0;
 }
 
-static void sendString(char* str)
+static void sendString(char *str)
 {
     for (int i = 0; i < strlen(str); i++) {
         uart_poll_out(pUartDev, str[i]);

@@ -66,6 +66,8 @@ static void disableAtUartModeTimerCallback(struct k_timer *unused);
 void disableAtUartMode(struct k_work *item);
 void restartUartRxAfterError(struct k_work *item);
 
+extern const char ubxVersionString[];
+
 static uint8_t uartRxBuf[UART_RX_BUF_NUM][UART_RX_LEN];
 static uint8_t *pNextUartBuf = uartRxBuf[1];
 
@@ -224,7 +226,7 @@ bool atHostHandleCommand(const uint8_t *const inAtBuf, uint32_t commandLen, atOu
     memset(outBuf, 0, sizeof(outBuf));
 
     if (strncmp("ATI9", inAtBuf, 4) == 0 && commandLen == 4) {
-        sprintf(outBuf, "\r\n\"%s\",\"%s\"\r\n", getGitSha(), getBuildTime());
+        sprintf(outBuf, "\r\n\"%s\",\"%s\",\"%s\"\r\n", getGitSha(), getBuildTime(), ubxVersionString);
         outputRsp(outBuf);
         outputRsp("OK\r\n");
     } else if (strncmp("AT+UMLA=1", inAtBuf, 9) == 0 && commandLen == 9) {

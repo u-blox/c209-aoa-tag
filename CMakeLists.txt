@@ -27,12 +27,18 @@ else()
   list(APPEND CONF_FILE ${CMAKE_CURRENT_SOURCE_DIR}/prj_debug.conf)
 endif()
 
+if(DEFINED NRF_DFU_BOOT_SUPPORT)
+message("NRF_DFU_BOOT_SUPPORT BUILD")
+add_definitions("-DNRF_DFU_BOOT_SUPPORT=${NRF_DFU_BOOT_SUPPORT}")
+list(APPEND CONF_FILE ${CMAKE_CURRENT_SOURCE_DIR}/prj_dfu_boot.conf)
+endif()
 
 find_package(Zephyr HINTS $ENV{ZEPHYR_BASE})
 project(direction_finding_beacon)
 
 FILE(GLOB app_sources src/*.c)
 target_sources(app PRIVATE ${app_sources})
+target_sources(app PRIVATE ubx_version.c)
 
 zephyr_library_include_directories(${ZEPHYR_BASE}/samples/bluetooth)
 

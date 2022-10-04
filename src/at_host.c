@@ -287,7 +287,13 @@ bool atHostHandleCommand(const uint8_t *const inAtBuf, uint32_t commandLen, atOu
             validCommand = false;
             outputRsp(ERROR_STR);
         }
-    } else if (strncmp("AT+ADVENABLE=", inAtBuf, 9) == 0 && commandLen > 9) {
+    } else if (strncmp("AT+TXPWR?", inAtBuf, 9) == 0 && commandLen == 9) {
+        int8_t pwr;
+        storageGetTxPower(&pwr);
+        sprintf(outBuf, "\r\n+TXPWR:%d", pwr);
+        outputRsp(outBuf);
+        outputRsp(OK_STR);
+    }  else if (strncmp("AT+ADVENABLE=", inAtBuf, 9) == 0 && commandLen > 13) {
         errno = 0;
         long enable = strtol(&inAtBuf[13], NULL, 10);
         if (errno == 0) {
@@ -309,12 +315,17 @@ bool atHostHandleCommand(const uint8_t *const inAtBuf, uint32_t commandLen, atOu
         errno = 0;
         long advInt = strtol(&inAtBuf[10], NULL, 10);
         if (errno == 0) {
-            btAdvUpdateAdvInterval(advInt, advInt);
+            if (!btAdvUpdateAdvInterval(advInt, advInt)) {
+                validCommand = false;
+            }
+        } else {
+            validCommand = false;
+        }
+        if (validCommand) {
             outputRsp(OK_STR);
         } else {
             outputRsp(ERROR_STR);
         }
-
     } else {
         validCommand = false;
         outputRsp(ERROR_STR);

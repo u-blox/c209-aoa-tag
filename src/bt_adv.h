@@ -54,8 +54,10 @@ void btAdvStop(void);
  *
  * @param   min_int         Min adv. interval in milliseconds
  * @param   max_int         Max adv. interval in milliseconds
+ *
+ * @return                  True if success, false otherwise.
  */
-void btAdvUpdateAdvInterval(uint16_t min, uint16_t max);
+bool btAdvUpdateAdvInterval(uint16_t min, uint16_t max);
 
 /**
  * @brief Set or update the periodic advertising data.

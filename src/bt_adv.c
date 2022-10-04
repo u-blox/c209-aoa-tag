@@ -30,7 +30,7 @@
 #include <bluetooth/services/nus.h>
 #endif
 
-LOG_MODULE_REGISTER(bt_adv_aoa, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
+LOG_MODULE_REGISTER(bt_adv_aoa, LOG_LEVEL_DBG);
 
 /* Length of CTE in unit of 8[us] */
 #define CTE_LEN (0x14U)
@@ -97,12 +97,14 @@ static struct bt_data ad[] = {
 static struct bt_le_ext_adv *adv_set;
 static uint16_t minAdvInterval;
 static uint16_t maxAdvInterval;
+static bool advRunning;
 
 void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t *namespace, uint8_t *instance_id,
                int8_t txPower)
 {
     minAdvInterval = min_int / 1.25;
     maxAdvInterval = max_int / 1.25;
+    advRunning = false;
 
     memcpy((uint8_t *)&ad[2].data[ADV_DATA_OFFSET_NAMESPACE], namespace, EDDYSTONE_NAMESPACE_LENGFTH);
     memcpy((uint8_t *)&ad[2].data[ADV_DATA_OFFSET_INSTANCE], instance_id, EDDYSTONE_INSTANCE_ID_LEN);
@@ -163,6 +165,10 @@ void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t *namespace, uint8_t *
 
 void btAdvStart(void)
 {
+    if (advRunning) {
+        LOG_WRN("Periodic adv. already running");
+        return;
+    }
     LOG_INF("Periodic advertising enable...");
     int err = bt_le_per_adv_start(adv_set);
     if (err) {
@@ -177,17 +183,23 @@ void btAdvStart(void)
         LOG_ERR("failed (err %d)\n", err);
         return;
     }
+    advRunning = true;
     LOG_INF("success\n");
 }
 
 void btAdvStop(void)
 {
+    if (!advRunning) {
+        LOG_WRN("Periodic adv. already stopped");
+        return;
+    }
     __ASSERT_NO_MSG(0 == bt_le_per_adv_stop(adv_set));
     __ASSERT_NO_MSG(0 == bt_le_ext_adv_stop(adv_set));
     LOG_INF("Adv stopped");
+    advRunning = false;
 }
 
-void btAdvUpdateAdvInterval(uint16_t min, uint16_t max)
+bool btAdvUpdateAdvInterval(uint16_t min, uint16_t max)
 {
     minAdvInterval = min / 1.25;
     maxAdvInterval = max / 1.25;
@@ -200,10 +212,11 @@ void btAdvUpdateAdvInterval(uint16_t min, uint16_t max)
     int err = bt_le_per_adv_set_param(adv_set, &per_adv_param);
     if (err) {
         LOG_ERR("failed (err %d)\n", err);
-        return;
     }
     LOG_INF("success\n");
     btAdvStart();
+
+    return err == 0;
 }
 
 void btAdvSetPerAdvData(struct bt_data *data, int len)

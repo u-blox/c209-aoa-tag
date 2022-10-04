@@ -26,7 +26,7 @@
 /*
 * Get local BT MAC address. Returns customer address if set in UICR, otherwise NRF address.
 */
-void utilGetBtAddr(bt_addr_le_t* addr);
+void utilGetBtAddr(bt_addr_le_t *addr);
 
 /**
  * @brief Change all lower case letters in string to upper.

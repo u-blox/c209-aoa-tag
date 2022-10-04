@@ -33,7 +33,8 @@
  * @param   instance_id     Pointer to the instance ID to be sent in Eddystone beacon.
  * @param   txPower         The TX power put in advertising data
  */
-void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t* namespace, uint8_t* instance_id, int8_t txPower);
+void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t *namespace, uint8_t *instance_id,
+               int8_t txPower);
 
 /**
  * @brief   Start BT advertising
@@ -50,7 +51,7 @@ void btAdvStop(void);
 /**
  * @brief   Change the advertsing interval
  * @details Change the advertising interval, advertsing will be stopped and restarted with the new interval.
- * 
+ *
  * @param   min_int         Min adv. interval in milliseconds
  * @param   max_int         Max adv. interval in milliseconds
  */
@@ -65,6 +66,6 @@ void btAdvUpdateAdvInterval(uint16_t min, uint16_t max);
  * @param ad_len    Advertising data length.
  *
  */
-void btAdvSetPerAdvData(struct bt_data* data, int len);
+void btAdvSetPerAdvData(struct bt_data *data, int len);
 
 #endif

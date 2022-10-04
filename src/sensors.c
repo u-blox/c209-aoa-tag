@@ -45,22 +45,23 @@ int sensorsInit(void)
     return err;
 }
 
-bool sensorsGetBme280Data(struct sensor_value* temp, struct sensor_value* press, struct sensor_value* humidity)
+bool sensorsGetBme280Data(struct sensor_value *temp, struct sensor_value *press,
+                          struct sensor_value *humidity)
 {
-	int err;
+    int err;
     const struct device *sensor = DEVICE_DT_GET_ANY(bosch_bme280);
 
-	if (sensor == NULL) {
-		LOG_ERR("Error: no device found.");
-		return false;
-	}
+    if (sensor == NULL) {
+        LOG_ERR("Error: no device found.");
+        return false;
+    }
 
-	if (!device_is_ready(sensor)) {
-		LOG_ERR("Error: Device \"%s\" is not ready; "
-		       "check the driver initialization logs for errors.",
-		       sensor->name);
-		return false;
-	}
+    if (!device_is_ready(sensor)) {
+        LOG_ERR("Error: Device \"%s\" is not ready; "
+                "check the driver initialization logs for errors.",
+                sensor->name);
+        return false;
+    }
 
     err = pm_device_action_run(sensor, PM_DEVICE_ACTION_RESUME);
     if (err != 0 && err != -EALREADY) {
@@ -88,10 +89,10 @@ bool sensorsGetBme280Data(struct sensor_value* temp, struct sensor_value* press,
         return false;
     }
 
-	return true;
+    return true;
 }
 
-bool sensorsGetLis2dw12(int16_t* x, int16_t* y, int16_t* z)
+bool sensorsGetLis2dw12(int16_t *x, int16_t *y, int16_t *z)
 {
     struct sensor_value acc_val[3];
     const struct device *sensor = DEVICE_DT_GET_ANY(st_lis2dw12);
@@ -102,11 +103,11 @@ bool sensorsGetLis2dw12(int16_t* x, int16_t* y, int16_t* z)
     }
 
     if (!device_is_ready(sensor)) {
-		LOG_ERR("Error: Device \"%s\" is not ready; "
+        LOG_ERR("Error: Device \"%s\" is not ready; "
                 "check the driver initialization logs for errors.",
                 sensor->name);
-		return false;
-	}
+        return false;
+    }
 
     int err = sensor_sample_fetch(sensor);
     if (err) {
@@ -115,9 +116,9 @@ bool sensorsGetLis2dw12(int16_t* x, int16_t* y, int16_t* z)
     }
     if (!err) {
         sensor_channel_get(sensor, SENSOR_CHAN_ACCEL_XYZ, acc_val);
-        *x = (int16_t)(sensor_value_to_double(&acc_val[0])*(32768/16));
-        *y = (int16_t)(sensor_value_to_double(&acc_val[1])*(32768/16));
-        *z = (int16_t)(sensor_value_to_double(&acc_val[2])*(32768/16));
+        *x = (int16_t)(sensor_value_to_double(&acc_val[0]) * (32768 / 16));
+        *y = (int16_t)(sensor_value_to_double(&acc_val[1]) * (32768 / 16));
+        *z = (int16_t)(sensor_value_to_double(&acc_val[2]) * (32768 / 16));
         LOG_DBG("x: %d y: %d z: %d", *x, *y, *z);
     } else {
         LOG_ERR("Failed fetching sample from %s", sensor->name);
@@ -133,16 +134,16 @@ bool sensorsDetectApds(void)
     const struct device *i2c_dev = device_get_binding(I2C_DEV);
 
     if (i2c_dev == NULL) {
-		LOG_ERR("Error: no APDS device found.");
-		return false;
-	}
+        LOG_ERR("Error: no APDS device found.");
+        return false;
+    }
 
-	if (!device_is_ready(i2c_dev)) {
-		LOG_ERR("Error: Device \"%s\" is not ready; "
-		       "check the driver initialization logs for errors.",
-		       i2c_dev->name);
-		return false;
-	}
+    if (!device_is_ready(i2c_dev)) {
+        LOG_ERR("Error: Device \"%s\" is not ready; "
+                "check the driver initialization logs for errors.",
+                i2c_dev->name);
+        return false;
+    }
 
     /* Verify sensor working by reading the ID */
     int err = i2c_reg_read_byte(i2c_dev, APDS_9306_065_ADDRESS, APDS_9306_065_REG_ID, &id);

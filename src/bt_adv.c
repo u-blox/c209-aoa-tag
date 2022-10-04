@@ -49,20 +49,20 @@ LOG_MODULE_REGISTER(bt_adv_aoa, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 static struct bt_le_ext_adv *adv_set;
 
 static struct bt_le_adv_param param =
-        // Below intervals are a tradeoff between power consumption and the time
-        // it takes for the scanner to start tracking this tag. Set it accordingly.
-        BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_EXT_ADV |
-                     BT_LE_ADV_OPT_USE_NAME,
-                     BT_GAP_ADV_FAST_INT_MIN_2 * 2, // 200ms
-                     BT_GAP_ADV_FAST_INT_MAX_2 * 2, // 300ms
-                     NULL);
+// Below intervals are a tradeoff between power consumption and the time
+// it takes for the scanner to start tracking this tag. Set it accordingly.
+    BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_EXT_ADV |
+                         BT_LE_ADV_OPT_USE_NAME,
+                         BT_GAP_ADV_FAST_INT_MIN_2 * 2, // 200ms
+                         BT_GAP_ADV_FAST_INT_MAX_2 * 2, // 300ms
+                         NULL);
 
 #if defined(CONFIG_BT_NUS)
 static struct bt_le_adv_param param_nus =
-        BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_USE_NAME | BT_LE_ADV_OPT_CONNECTABLE,
-                     BT_GAP_ADV_SLOW_INT_MIN,
-                     BT_GAP_ADV_SLOW_INT_MAX,
-                     NULL);
+    BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_USE_NAME | BT_LE_ADV_OPT_CONNECTABLE,
+                         BT_GAP_ADV_SLOW_INT_MIN,
+                         BT_GAP_ADV_SLOW_INT_MAX,
+                         NULL);
 
 static const struct bt_data ad_nus[] = {
     BT_DATA_BYTES(BT_DATA_FLAGS, (BT_LE_AD_GENERAL | BT_LE_AD_NO_BREDR)),
@@ -76,37 +76,39 @@ static struct bt_le_ext_adv_start_param ext_adv_start_param = {
 };
 
 struct bt_df_adv_cte_tx_param cte_params = { .cte_len = CTE_LEN,
-                         .cte_count = PER_ADV_EVENT_CTE_COUNT,
-                         .cte_type = BT_DF_CTE_TYPE_AOA,
-                         .num_ant_ids = 0,
-                         .ant_ids = NULL
+           .cte_count = PER_ADV_EVENT_CTE_COUNT,
+           .cte_type = BT_DF_CTE_TYPE_AOA,
+           .num_ant_ids = 0,
+           .ant_ids = NULL
 };
 
 static struct bt_data ad[] = {
     BT_DATA_BYTES(BT_DATA_FLAGS, BT_LE_AD_NO_BREDR),
     BT_DATA_BYTES(BT_DATA_UUID16_ALL, 0xaa, 0xfe),
     BT_DATA_BYTES(BT_DATA_SVC_DATA16,
-        0xaa, 0xfe, /* Eddystone UUID */
-        0x00, /* Eddystone-UID frame type */
-        0x00, /* TX Power */
-        'N', 'I', 'N', 'A', '-', 'B', '4', 'T', 'A', 'G', /* Namespace */
-        'i', 'n', 's', 't', 'a', 'e', /* Instance Id */
-        0x00, /* reserved */
-        0x00 /* reserved */
-    )
+                  0xaa, 0xfe, /* Eddystone UUID */
+                  0x00, /* Eddystone-UID frame type */
+                  0x00, /* TX Power */
+                  'N', 'I', 'N', 'A', '-', 'B', '4', 'T', 'A', 'G', /* Namespace */
+                  'i', 'n', 's', 't', 'a', 'e', /* Instance Id */
+                  0x00, /* reserved */
+                  0x00 /* reserved */
+                 )
 };
 
 
 static uint16_t minAdvInterval;
 static uint16_t maxAdvInterval;
 
-void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t* namespace, uint8_t* instance_id, int8_t txPower) {
+void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t *namespace, uint8_t *instance_id,
+               int8_t txPower)
+{
     minAdvInterval = min_int / 1.25;
     maxAdvInterval = max_int / 1.25;
 
-    memcpy((uint8_t*)&ad[2].data[ADV_DATA_OFFSET_NAMESPACE], namespace, EDDYSTONE_NAMESPACE_LENGFTH);
-    memcpy((uint8_t*)&ad[2].data[ADV_DATA_OFFSET_INSTANCE], instance_id, EDDYSTONE_INSTANCE_ID_LEN);
-    memcpy((uint8_t*)&ad[2].data[ADV_DATA_OFFSET_TX_POWER], &txPower, sizeof(txPower));
+    memcpy((uint8_t *)&ad[2].data[ADV_DATA_OFFSET_NAMESPACE], namespace, EDDYSTONE_NAMESPACE_LENGFTH);
+    memcpy((uint8_t *)&ad[2].data[ADV_DATA_OFFSET_INSTANCE], instance_id, EDDYSTONE_INSTANCE_ID_LEN);
+    memcpy((uint8_t *)&ad[2].data[ADV_DATA_OFFSET_TX_POWER], &txPower, sizeof(txPower));
 
     int err = bt_le_ext_adv_create(&param, NULL, &adv_set);
     if (err) {
@@ -161,7 +163,8 @@ void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t* namespace, uint8_t* 
     LOG_INF("success\n");
 }
 
-void btAdvStart(void) {
+void btAdvStart(void)
+{
     LOG_INF("Periodic advertising enable...");
     int err = bt_le_per_adv_start(adv_set);
     if (err) {
@@ -179,13 +182,15 @@ void btAdvStart(void) {
     LOG_INF("success\n");
 }
 
-void btAdvStop(void) {
+void btAdvStop(void)
+{
     __ASSERT_NO_MSG(0 == bt_le_per_adv_stop(adv_set));
     __ASSERT_NO_MSG(0 == bt_le_ext_adv_stop(adv_set));
     LOG_INF("Adv stopped");
 }
 
-void btAdvUpdateAdvInterval(uint16_t min, uint16_t max) {
+void btAdvUpdateAdvInterval(uint16_t min, uint16_t max)
+{
     minAdvInterval = min / 1.25;
     maxAdvInterval = max / 1.25;
     btAdvStop();
@@ -203,7 +208,7 @@ void btAdvUpdateAdvInterval(uint16_t min, uint16_t max) {
     btAdvStart();
 }
 
-void btAdvSetPerAdvData(struct bt_data* data, int len)
+void btAdvSetPerAdvData(struct bt_data *data, int len)
 {
     LOG_INF("Set per adv data...");
     int err = bt_le_per_adv_set_data(adv_set, data, len);

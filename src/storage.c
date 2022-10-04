@@ -34,13 +34,13 @@ int storageInit(void)
     struct flash_pages_info info;
     int rc = 0;
     /* define the nvs file system by settings with:
-     *	sector_size equal to the pagesize,
-     *	starting at FLASH_AREA_OFFSET(storage)
+     *  sector_size equal to the pagesize,
+     *  starting at FLASH_AREA_OFFSET(storage)
      */
     fs.offset = FLASH_AREA_OFFSET(storage);
     rc = flash_get_page_info_by_offs(
-            device_get_binding(DT_CHOSEN_ZEPHYR_FLASH_CONTROLLER_LABEL),
-            fs.offset, &info);
+             device_get_binding(DT_CHOSEN_ZEPHYR_FLASH_CONTROLLER_LABEL),
+             fs.offset, &info);
     if (rc) {
         LOG_ERR("Unable to get page info");
         return -1;
@@ -65,10 +65,11 @@ void storageWriteTxPower(int8_t power)
 {
     int ret;
     ret = nvs_write(&fs, TX_POWER_NVS_ID, &power, sizeof(int8_t));
-    __ASSERT(ret == sizeof(int8_t) || ret == 0, "nvs_write failed for ID: %d err: %d", TX_POWER_NVS_ID, ret);
+    __ASSERT(ret == sizeof(int8_t) ||
+             ret == 0, "nvs_write failed for ID: %d err: %d", TX_POWER_NVS_ID, ret);
 }
 
-void storageGetTxPower(int8_t* pPower)
+void storageGetTxPower(int8_t *pPower)
 {
     uint32_t nBytes;
 

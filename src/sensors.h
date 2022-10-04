@@ -34,10 +34,11 @@ int sensorsInit(void);
  * @param   temp           [out] temperature stored in sensor_value, val1 is integer part and val2 is decimal part.
  * @param   press          [out] pressure stored in sensor_value, val1 is integer part and val2 is decimal part.
  * @param   humidity       [out] humidity stored in sensor_value, val1 is integer part and val2 is decimal part.
- * 
+ *
  * @return  true if successful, else false.
  */
-bool sensorsGetBme280Data(struct sensor_value* temp, struct sensor_value* press, struct sensor_value* humidity);
+bool sensorsGetBme280Data(struct sensor_value *temp, struct sensor_value *press,
+                          struct sensor_value *humidity);
 
 /**
  * @brief   Get the acceleration on x, y, z axes.
@@ -46,15 +47,15 @@ bool sensorsGetBme280Data(struct sensor_value* temp, struct sensor_value* press,
  * @param   x           [out] acceleration on x axis.
  * @param   y           [out] acceleration on y axis.
  * @param   z           [out] acceleration on z axis.
- * 
+ *
  * @return  true if successful, else false.
  */
-bool sensorsGetLis2dw12(int16_t* x, int16_t* y, int16_t* z);
+bool sensorsGetLis2dw12(int16_t *x, int16_t *y, int16_t *z);
 
 /**
  * @brief   Detect if APDS9306 is connected.
  * @details Rading from APDS9306 is not implemented. This function just checks if it's alive.
- * 
+ *
  * @return  true if successful, else false.
  */
 bool sensorsDetectApds(void);

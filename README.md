@@ -62,6 +62,13 @@ Each write will be parsed as an AT command so no need for line termination chara
 # Using the Sensors on the C209
 The C209 application board comes with some sensors. Study `src/sensors.c` for example how to get data from the sensors.
 
+# Code formatting and style
+Code formatting and style follows [ubxlib](https://github.com/u-blox/ubxlib/blob/master/astyle.cfg).
+
+To automatically format the code run:
+
+`./tools/format_code.sh`
+
 # Using the application
 Please review the [user guide](https://www.u-blox.com/en/docs/UBX-21004616) for more details on how to use the XPLR-AOA-1 and XPLR-AOA-2 kits.
 

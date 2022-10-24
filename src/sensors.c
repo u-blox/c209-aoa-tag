@@ -32,13 +32,24 @@ LOG_MODULE_REGISTER(sensors, LOG_LEVEL_DBG);
 int sensorsInit(void)
 {
     int err = 0;
-
     const struct device *bme_device = DEVICE_DT_GET_ANY(bosch_bme280);
+    const struct device *lis2dw12 = DEVICE_DT_GET_ANY(st_lis2dw12);
+
     // Power down to save power
     if (bme_device != NULL) {
         err = pm_device_action_run(bme_device, PM_DEVICE_ACTION_SUSPEND);
         if (err != 0) {
             LOG_ERR("bosch_bme280 suspend err: %d", err);
+        }
+    }
+
+    if (lis2dw12 != NULL) {
+        struct sensor_value val;
+        val.val1 = 0;
+        val.val2 = 0;
+        err = sensor_attr_set(lis2dw12, SENSOR_CHAN_ACCEL_XYZ, SENSOR_ATTR_SAMPLING_FREQUENCY, &val);
+        if (err < 0) {
+            LOG_ERR("lis2dw12 ODR set zero failed: %d", err);
         }
     }
 

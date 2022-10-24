@@ -98,6 +98,7 @@ void main(void)
     bluetoothReady = 0;
 
     storageInit();
+    sensorsInit();
 
     // Only swap public address. It's done like this in u-connect.
     if (addr.type == BT_ADDR_LE_PUBLIC) {

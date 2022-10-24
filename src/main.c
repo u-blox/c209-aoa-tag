@@ -43,7 +43,6 @@ LOG_MODULE_REGISTER(app, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
 #define BLINK_STACKSIZE         1024
 #define BLINK_PRIORITY          7
-#define NUM_ADV_INTERVALS       3
 #define LED_BLINK_INTERVAL_MS   150
 #define BLINK_INTERVAL_MS       5000
 
@@ -74,7 +73,7 @@ static struct bt_nus_cb nus_cb = {
 #endif
 
 static bool isAdvRunning = true;
-static uint16_t advIntervals[NUM_ADV_INTERVALS] = {50, 100, 1000};
+static uint16_t advIntervals[] = {25, 100, 500, 1000};
 static uint8_t advIntervalIndex = 0;
 static char *pDefaultGroupNamespace = "NINA-B4TAG";
 
@@ -209,7 +208,7 @@ static void onButtonPressCb(buttonPressType_t type)
     if (type == BUTTONS_SHORT_PRESS) {
         // If stopped, then restart if adv. interval was changed
         isAdvRunning = true;
-        advIntervalIndex = (advIntervalIndex + 1) % NUM_ADV_INTERVALS;
+        advIntervalIndex = (advIntervalIndex + 1) % ARRAY_SIZE(advIntervals);
         uint16_t new_adv_interval = advIntervals[advIntervalIndex];
         LOG_INF("New interval: %d => %d", advIntervalIndex, new_adv_interval);
         btAdvUpdateAdvInterval(new_adv_interval, new_adv_interval);

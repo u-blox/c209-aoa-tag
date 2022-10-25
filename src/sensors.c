@@ -20,6 +20,7 @@
 #include <drivers/i2c.h>
 #include <pm/pm.h>
 #include <pm/device.h>
+#include <lis2dw12_reg.h>
 
 LOG_MODULE_REGISTER(sensors, LOG_LEVEL_DBG);
 
@@ -28,6 +29,8 @@ LOG_MODULE_REGISTER(sensors, LOG_LEVEL_DBG);
 #define APDS_9306_065_ADDRESS   0x52
 #define APDS_9306_065_REG_ID    0x06
 #define APDS_9306_065_CHIP_ID   0xB3
+
+static int configureLis2dw12Default(const struct device *lis2dw12Dev);
 
 int sensorsInit(void)
 {
@@ -43,14 +46,8 @@ int sensorsInit(void)
         }
     }
 
-    if (lis2dw12 != NULL) {
-        struct sensor_value val;
-        val.val1 = 0;
-        val.val2 = 0;
-        err = sensor_attr_set(lis2dw12, SENSOR_CHAN_ACCEL_XYZ, SENSOR_ATTR_SAMPLING_FREQUENCY, &val);
-        if (err < 0) {
-            LOG_ERR("lis2dw12 ODR set zero failed: %d", err);
-        }
+    if (device_is_ready(lis2dw12)) {
+        err = configureLis2dw12Default(lis2dw12);
     }
 
     return err;
@@ -169,4 +166,41 @@ bool sensorsDetectApds(void)
     }
 
     return false;
+}
+
+static int configureLis2dw12Default(const struct device *lis2dw12Dev)
+{
+    int err;
+    struct sensor_value val;
+    stmdev_ctx_t *ctx = (stmdev_ctx_t *)lis2dw12Dev->config;
+
+    /*
+    Due to the design of the C209 HW by default there is a ~300uA current leak
+    coming from the LIS_INT pin. This is due to a external pullup resistor on this pin and the fact
+    that LIS2DW12 by default have an internal pulldown on the same pin.
+    Fortunately LIS2DW12 have a configuration to disable the internal
+    pulldown on INT1 pin and to make the INT1 pin active low instead.
+
+    The current codebase does not use the LIS_INT/INT1 pin functionality, however if
+    in future it is make sure to configure and check so that the Zephyr driver can handle
+    swapped polarity of INT1/2 pins of the LIS2DW12.
+    */
+    err = lis2dw12_pin_polarity_set(ctx, LIS2DW12_ACTIVE_LOW);
+    if (err) {
+        LOG_ERR("Updating INT pin polarity");
+        return err;
+    }
+    err = lis2dw12_pin_mode_set(ctx, LIS2DW12_OPEN_DRAIN);
+    if (err) {
+        LOG_ERR("Updating INT pin mode");
+        return err;
+    }
+    val.val1 = 0; // ODR 0 will set LIS2DW12 into power down mode
+    val.val2 = 0;
+    err = sensor_attr_set(lis2dw12Dev, SENSOR_CHAN_ACCEL_XYZ, SENSOR_ATTR_SAMPLING_FREQUENCY, &val);
+    if (err < 0) {
+        LOG_ERR("lis2dw12 ODR set zero failed: %d", err);
+    }
+
+    return err;
 }

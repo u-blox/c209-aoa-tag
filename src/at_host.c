@@ -39,18 +39,12 @@
 
 LOG_MODULE_REGISTER(at_host, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
-
-#define THREAD_STACKSIZE       1024
-#define THREAD_PRIORITY        7
-
 #define UART_RX_BUF_NUM 2
 #define UART_RX_LEN     256
 #define UART_RX_TIMEOUT 1
 #define AT_MAX_CMD_LEN  100
 #define OK_STR          "\r\nOK\r\n"
 #define ERROR_STR       "\r\nERROR\r\n"
-
-K_THREAD_STACK_DEFINE(threadStack, THREAD_STACKSIZE);
 
 static void resetUartAtBuffer(void);
 static void sendString(char *str);

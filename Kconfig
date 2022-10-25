@@ -35,6 +35,13 @@ menu "AoA Tag"
     default n
     help
         "Add the NUS service and accept AT commands over it."
+
+    config PERIODIC_LED_BLINK
+        bool
+    prompt "Blink the blue"
+    help
+        "Periodically blink the blue LED  to indicate tag is running."
+    default y
 endmenu
 
 module = APPLICATION_MODULE

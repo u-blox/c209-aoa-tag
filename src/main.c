@@ -44,7 +44,7 @@ LOG_MODULE_REGISTER(app, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 #define BLINK_STACKSIZE         1024
 #define BLINK_PRIORITY          7
 #define LED_BLINK_INTERVAL_MS   150
-#define BLINK_INTERVAL_MS       5000
+#define LOOP_SLEEP_INTERVAL     5000
 
 // In order to avoid accidental collisions between tags we restart adv. every now and then.
 // Comment out to disable this.
@@ -147,11 +147,13 @@ static void blink(void)
 #endif
 
     while (1) {
+#ifdef CONFIG_PERIODIC_LED_BLINK
         if (isAdvRunning) {
             ledsSetState(LED_BLUE, 1);
             k_sleep(K_MSEC(10));
             ledsSetState(LED_BLUE, 0);
         }
+#endif
 #ifdef ADV_RESTART_INTERVAL
         currentTime = k_uptime_get();
         if (currentTime - lastAdvRestartMs >= ADV_RESTART_INTERVAL) {
@@ -181,7 +183,7 @@ static void blink(void)
             }
         }
 #endif
-        k_msleep(BLINK_INTERVAL_MS);
+        k_msleep(LOOP_SLEEP_INTERVAL);
     }
 }
 

@@ -66,6 +66,26 @@ Each write will be parsed as an AT command so no need for line termination chara
 # Using the Sensors on the C209
 The C209 application board comes with some sensors. Study `src/sensors.c` for example how to get data from the sensors. If `CONFIG_SEND_SENSOR_DATA_IN_PER_ADV_DATA` is enabled (default y) then sensor data from the BME280 will be sent in the periodic advertising data.
 
+# Optimizing for power consumption
+The factor that affects the power conumption the most is the periodic advertising interval. This can be changed by the switch (`sw1`) on the board.
+Other than that the following configuration options also significantly affects the power consumption.
+To minimize power consumption change in the `prj.conf` to below values. `CONFIG_EXT_ADV_INT_MS_MIN` and `CONFIG_EXT_ADV_INT_MS_MAX` can be set to anything that is acceptable for the use-case. The higher interval, that longer/harder it will be for the scanning anchor to find the tag and initiate the periodic advertising synchronization.
+```
+CONFIG_SEND_SENSOR_DATA_IN_PER_ADV_DATA=n
+CONFIG_ALLOW_REMOTE_AT_OVER_NUS=n
+CONFIG_PERIODIC_LED_BLINK=n
+
+CONFIG_EXT_ADV_INT_MS_MIN=1000
+CONFIG_EXT_ADV_INT_MS_MAX=1500
+```
+With this setup following power consumption is achieved with the u-blox C209 tag:
+| Periodic adv. int. (ms) | Power consumption (μA) |
+|-------------------------|------------------------|
+| 50                      | 153                    |
+| 100                     | 92                     |
+| 250                     | 56                     |
+| 1000                    | 38                     |
+
 # Code formatting and style
 Code formatting and style follows [ubxlib](https://github.com/u-blox/ubxlib/blob/master/astyle.cfg).
 

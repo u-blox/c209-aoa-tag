@@ -42,6 +42,23 @@ menu "AoA Tag"
     help
         "Periodically blink the blue LED  to indicate tag is running."
     default y
+
+    config EXT_ADV_INT_MS_MIN
+        int
+    prompt "Minimum extended advertising interval in milliseconds."
+    help
+        "This is how often extended advertisements are sent, this is a tradeoff in power consumption and how fast/easy it is for the scanner to find the tag and initiate a periodic advertsing sync. to it."
+    default 250
+    range 32 16384
+
+    config EXT_ADV_INT_MS_MAX
+        int
+    prompt "Maximum extended advertising interval in milliseconds."
+    help
+        "This is how often extended advertisements are sent, this is a tradeoff in power consumption and how fast/easy it is for the scanner to find the tag and initiate a periodic advertsing sync. to it."
+    default EXT_ADV_INT_MS_MIN
+    range EXT_ADV_INT_MS_MIN 16384
+
 endmenu
 
 module = APPLICATION_MODULE

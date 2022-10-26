@@ -51,8 +51,8 @@ static struct bt_le_adv_param param =
 // it takes for the scanner to start tracking this tag. Set it accordingly.
     BT_LE_ADV_PARAM_INIT(BT_LE_ADV_OPT_EXT_ADV |
                          BT_LE_ADV_OPT_USE_NAME,
-                         BT_GAP_ADV_FAST_INT_MIN_2 * 2, // 200ms
-                         BT_GAP_ADV_FAST_INT_MAX_2 * 2, // 300ms
+                         CONFIG_EXT_ADV_INT_MS_MIN / 0.625,
+                         CONFIG_EXT_ADV_INT_MS_MAX / 0.625,
                          NULL);
 
 #if defined(CONFIG_BT_NUS)

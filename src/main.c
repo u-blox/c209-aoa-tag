@@ -73,7 +73,7 @@ static struct bt_nus_cb nus_cb = {
 #endif
 
 static bool isAdvRunning = true;
-static uint16_t advIntervals[] = {50, 100, 500, 1000};
+static uint16_t advIntervals[] = {50, 100, 250, 1000};
 static uint8_t advIntervalIndex = 0;
 static char *pDefaultGroupNamespace = "NINA-B4TAG";
 

@@ -3,12 +3,8 @@ AT commands over Nordic UART Service
 """
 
 import asyncio
-import sys
-import time
 
 from bleak import BleakScanner, BleakClient
-from bleak.backends.scanner import AdvertisementData
-from bleak.backends.device import BLEDevice
 import numpy as np
 
 # Nordic UART Service UUIDs
@@ -60,13 +56,13 @@ async def send_at_commands(device, command_list):
                     cmd_sent_evt.clear()
                     print("Send:", at)
                     tries = 0
-                    while (tries < 3):
+                    while tries < 3:
                         await client.write_gatt_char(UART_RX_CHAR_UUID, str.encode(at))
                         try:
                             await asyncio.wait_for(cmd_sent_evt.wait(), timeout=2)
                             break
                         except asyncio.TimeoutError:
-                            tries = tries+1
+                            tries = tries + 1
                             print("Timeout error no rsp. Try:", tries)
 
                 print("Done diconnect")
@@ -78,10 +74,6 @@ async def send_at_commands(device, command_list):
                 return []
                 pass
     return None
-
-
-def main(devices, command_list):
-    return asyncio.gather(*(dummy(device, command_list) for device in devices))
 
 
 def ble_send_at_commands(devices, command_list):

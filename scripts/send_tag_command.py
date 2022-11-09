@@ -3,7 +3,7 @@ import argparse, sys
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Tool to send AT command to AoA Tags with the NUS Service"
+        description="Tool to send AT command to AoA Tags with the NUS Service. If no address specified it will look for all BLE devices with the NUS service."
     )
 
     parser.add_argument(
@@ -29,11 +29,10 @@ if __name__ == "__main__":
         help="Scan timeout for discovery of AoA tags",
     )
 
-
     args = parser.parse_args()
     res = None
     flatten_results = []
-    if (args.address == None):
+    if args.address == None:
         tags = ble_list_uart_devices(timeout=int(args.timeout))
         print("Found {0} AoA tags".format(len(tags)))
         print(tags)

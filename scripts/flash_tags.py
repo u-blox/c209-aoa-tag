@@ -1,14 +1,20 @@
+"""
+Flashing many tags at once using nrfutil over serial
+"""
+
 import argparse, sys, subprocess
 from multiprocessing import Process
 
 
 def run_command(cmd):
-    subprocess.run(cmd)
+    out = subprocess.run(cmd)
+    if out.returncode != 0:
+        print("Failed:", cmd)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="Tool to flash a list of COM ports using nRF DFU bootloader (nrfutil tool)."
+        description="Tool to flash a list of COM ports simultaneously using nRF DFU bootloader (assumes nrfutil tool is in PATH)."
     )
 
     parser.add_argument(
@@ -16,11 +22,14 @@ if __name__ == "__main__":
         dest="com_ports",
         required=True,
         nargs="+",
-        help="Serial port of the tags to be flashed.",
+        help="Serial port of the tags to be flashed. Make sure all tags are in bootloader mode.",
     )
 
     parser.add_argument(
-        "--fw_file", dest="fw_file", required=True, help="FW File to be flashed"
+        "--fw_file",
+        dest="fw_file",
+        required=True,
+        help="FW File to be flashed (packaged .zip)",
     )
 
     args = parser.parse_args()

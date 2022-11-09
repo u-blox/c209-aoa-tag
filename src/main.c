@@ -64,8 +64,8 @@ BT_CONN_CB_DEFINE(conn_callbacks) = {
     .connected    = connected,
     .disconnected = disconnected,
 };
-static struct bt_conn *current_conn;
-static uint32_t nus_max_send_len;
+static struct bt_conn *currentConn;
+static uint32_t nusMaxSendLen;
 
 static struct bt_nus_cb nus_cb = {
     .received = bt_receive_cb,
@@ -277,8 +277,8 @@ static void connected(struct bt_conn *conn, uint8_t err)
         LOG_ERR("Connection failed (err %u)", err);
         return;
     }
-    current_conn = bt_conn_ref(conn);;
-    nus_max_send_len = 20;
+    currentConn = bt_conn_ref(conn);
+    nusMaxSendLen = 20;
 
     bt_addr_le_to_str(bt_conn_get_dst(conn), addr, sizeof(addr));
     LOG_INF("Connected %s", addr);
@@ -292,14 +292,14 @@ static void disconnected(struct bt_conn *conn, uint8_t reason)
 
     LOG_INF("Disconnected: %s (reason %u)", addr, reason);
 
-    if (current_conn) {
-        bt_conn_unref(current_conn);
+    if (currentConn) {
+        bt_conn_unref(currentConn);
     }
 }
 
 static void nus_send_data(char *data)
 {
-    int err = bt_nus_send(current_conn, (uint8_t *)data, strlen(data));
+    int err = bt_nus_send(currentConn, (uint8_t *)data, strlen(data));
     if (err) {
         LOG_WRN("Failed to send data over BLE connection, err: %d", err);
     }

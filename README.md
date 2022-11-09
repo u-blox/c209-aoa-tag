@@ -15,7 +15,7 @@ For more detailed instructions go to the offical [nRF Connect Getting Started Gu
 ### Building with nRF Connect VSCode plugin
 - In Visual Studio Code go to marketplace and search for "nrf connect".
 - Install the nRF Connect Extension Pack (this will install all required extensions at once).
-- Click on the nRF Connect extention and select "Add an existing application"
+- Click on the nRF Connect extension and select "Add an existing application"
 - Choose the folder c209-aoa-tag (or the folder name you choose when cloning this repository).
 - Press CTRL+SHIFT+P and search/select "nRF Connect: Select nRF Connect SDK"
 - Press "Yes" in the popup asking if you want to change it.

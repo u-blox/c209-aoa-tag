@@ -38,13 +38,13 @@ The `prj.conf` is split into multiple files, first there is `prj_base.conf` and 
 Then there are `prj_debug.conf` and `prj_release.conf`, these contain configurations specific to debug or release, for example compiler optimization level and logging config. By default a debug build is made, to build release run `west build -p -b ubx_evkninab4_nrf52833 -- -DRELEASE=1`. Those options can also be input when adding the application in the nRF Connect VS Code plugin under "Extra CMake arguments".
 
 ## Running on other boards
-This sample application primarily supports the u-blox **C209** application board bundled together with the u-blox **C211** in the **XPLR-AOA-1**.
+This sample application primarily supports the u-blox **C209** application board bundled together with the u-blox **C211** or **ANT-B10** in the **XPLR-AOA** kits.
 
 However getting it up and running on other boards which either use NINA-B4 module (like **NINA-B4-EVK**) or a NRF52833 DK is only a matter of selecting the appropriate board file.
 
 ## Building the application to use with OpenCPU DFU Bootloader
-C209 boards come pre flashed with a DFU bootloader. To build a binary that is compatible with that add `-DNRF_DFU_BOOT_SUPPORT=1` to build arguments. If the pre-flashed bootloader has been erased or overwritten then flash the dfu_bootloader/mbr_nrf52_2.4.1_mbr.hex and dfu_bootloader/nrf52833_xxaa_bootloader.hex using using J-Flash Lite/nrfjprog or similar tool to restore it. See the following complete steps to build and flash.
-- In menuconfig change "Flash Base Address" from 0x0 to 0x1000 (or uncomment CONFIG_FLASH_BASE_ADDRESS=0x1000 in prj_base.conf)
+C209 boards come pre flashed with a DFU bootloader. To build a binary that is compatible with that add `-DNRF_DFU_BOOT_SUPPORT=1` to build arguments. If the pre-flashed bootloader has been erased or overwritten then flash the `dfu_bootloader/mbr_nrf52_2.4.1_mbr.hex` and `dfu_bootloader/nrf52833_xxaa_bootloader.hex` using using J-Flash Lite/nrfjprog or similar tool to restore it. See the following complete steps to build and flash.
+- Add `-DNRF_DFU_BOOT_SUPPORT=1` to the build arguments.
 - Re-Run CMAKE and re-build
 - Copy the zephyr.bin file from build/zephyr folder to dfu_bootloader.
 - In dfu_bootloader run `nrfutil pkg generate --hw-version 52 --sd-req 0x00 --application-version 0 --application zephyr.bin app.zip`
@@ -64,7 +64,10 @@ If Kconfig `CONFIG_ALLOW_REMOTE_AT_OVER_NUS` is enabled (default yes) then the a
 Each write will be parsed as an AT command so no need for line termination characters etc.
 
 # Using the Sensors on the C209
-The C209 application board comes with some sensors. Study `src/sensors.c` for example how to get data from the sensors. If `CONFIG_SEND_SENSOR_DATA_IN_PER_ADV_DATA` is enabled (default y) then sensor data from the BME280 will be sent in the periodic advertising data.
+The C209 application board comes with some sensors. Study `src/sensors.c` for example how to get data from the sensors. If `CONFIG_SEND_SENSOR_DATA_IN_PER_ADV_DATA` is enabled (default n) then sensor data from the BME280 will be sent in the periodic advertising data.
+
+# Sending data in periodic advertisements
+Data can be sent from the tag to the anchor/scanner using the payload of periodic advertisements, study the usage of `btAdvSetPerAdvData` when `CONFIG_SEND_SENSOR_DATA_IN_PER_ADV_DATA` to see how.
 
 # Optimizing for power consumption
 The factor that affects the power conumption the most is the periodic advertising interval. This can be changed by the switch (`sw1`) on the board.

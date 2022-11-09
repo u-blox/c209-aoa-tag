@@ -110,6 +110,7 @@ void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t *namespace, uint8_t *
     memcpy((uint8_t *)&ad[2].data[ADV_DATA_OFFSET_INSTANCE], instance_id, EDDYSTONE_INSTANCE_ID_LEN);
     memcpy((uint8_t *)&ad[2].data[ADV_DATA_OFFSET_TX_POWER], &txPower, sizeof(txPower));
 
+    LOG_INF("Create ext. adv...");
     int err = bt_le_ext_adv_create(&param, NULL, &adv_set);
     if (err) {
         LOG_ERR("failed (err %d)\n", err);
@@ -156,7 +157,7 @@ void btAdvInit(uint16_t min_int, uint16_t max_int, uint8_t *namespace, uint8_t *
     LOG_INF("Legacy advertising NUS enable...");
     err = bt_le_adv_start(&param_nus, ad_nus, ARRAY_SIZE(ad_nus), NULL, 0);
     if (err) {
-        printk("Advertising failed to start (err %d)\n", err);
+        LOG_ERR("Advertising failed to start (err %d)\n", err);
         return;
     }
 #endif
@@ -194,7 +195,6 @@ void btAdvStop(void)
         return;
     }
     __ASSERT_NO_MSG(0 == bt_le_per_adv_stop(adv_set));
-    __ASSERT_NO_MSG(0 == bt_le_ext_adv_stop(adv_set));
     LOG_INF("Adv stopped");
     advRunning = false;
 }

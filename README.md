@@ -89,6 +89,11 @@ With this setup following power consumption is achieved with the u-blox C209 tag
 | 250                     | 56                     |
 | 1000                    | 38                     |
 
+## C209 specific
+Due to the design of the C209 HW by default there is a ~300uA current leak coming from the LIS_INT pin. This is due to a external pullup resistor on this pin and the fact that LIS2DW12 by default have an internal pulldown on the same pin. Fortunately LIS2DW12 have a configuration to disable the internal pulldown on INT1 pin and to make the INT1 pin active low instead. The current codebase does not use the LIS_INT/INT1 pin functionality, however if in future it is make sure to configure and check so that the Zephyr driver can handle swapped polarity of INT1/2 pins of the LIS2DW12.
+
+The fix for minimal power consumption can be found in `sensors.c` file, check the function `configureLis2dw12Default`.
+
 # Code formatting and style
 Code formatting and style follows [ubxlib](https://github.com/u-blox/ubxlib/blob/master/astyle.cfg).
 

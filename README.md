@@ -49,7 +49,7 @@ C209 boards come pre flashed with a DFU bootloader. To build a binary that is co
 - Copy the zephyr.bin file from build/zephyr folder to dfu_bootloader.
 - In dfu_bootloader run `nrfutil pkg generate --hw-version 52 --sd-req 0x00 --application-version 0 --application zephyr.bin app.zip`
 - To enter DFU mode when an application is flashed hold down SWITCH_2 and click reset.
-- In dfu_bootloader run `nrfutil dfu serial -pkg app.zip -p COMXXX -b 115200 -fc 1`
+- In dfu_bootloader run `nrfutil dfu serial -pkg app.zip -p COMXXX -b 115200 -fc 1 -t 1`
 - Now the module will be flashed. It's also possible to keep the "Flash Base Address" to 0x1000 and develop as usual and flashing with SeS or west as it will flash the application on the correct address and it will be started by the open bootloader.
 
 `nrfutil` executable for flashing with OpenCPU DFU Bootloader can be downloaded from here: https://github.com/NordicSemiconductor/pc-nrfutil/releases 

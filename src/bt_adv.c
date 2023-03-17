@@ -195,6 +195,7 @@ void btAdvStop(void)
         return;
     }
     __ASSERT_NO_MSG(0 == bt_le_per_adv_stop(adv_set));
+    __ASSERT_NO_MSG(0 == bt_le_ext_adv_stop(adv_set));
     LOG_INF("Adv stopped");
     advRunning = false;
 }

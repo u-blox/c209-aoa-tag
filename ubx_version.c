@@ -16,7 +16,7 @@
 
 #define MAJOR_VERSION 2
 #define MINOR_VERSION 0
-#define SUB_MINOR_VERSION 0
+#define SUB_MINOR_VERSION 1
 
 
 #define TO_STRING_NX(x) #x

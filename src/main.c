@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 #include <string.h>
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/hci.h>
+#include <zephyr/bluetooth/bluetooth.h>
+#include <zephyr/bluetooth/hci.h>
 #include "leds.h"
 #include "bt_adv.h"
 #include "buttons.h"
-#include <random/rand32.h>
-#include <sys/__assert.h>
-#include <device.h>
-#include <drivers/sensor.h>
+#include <zephyr/random/rand32.h>
+#include <zephyr/sys/__assert.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/sensor.h>
 #include "bt_util.h"
-#include <bluetooth/hci.h>
-#include <bluetooth/hci_vs.h>
-#include <sys/byteorder.h>
+#include <zephyr/bluetooth/hci.h>
+#include <zephyr/bluetooth/hci_vs.h>
+#include <zephyr/sys/byteorder.h>
 #include "at_host.h"
 #include "storage.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "sensors.h"
 
 #if defined(CONFIG_BT_NUS)

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include <device.h>
-#include <sys/__assert.h>
-#include <drivers/gpio.h>
+#include <zephyr/device.h>
+#include <zephyr/sys/__assert.h>
+#include <zephyr/drivers/gpio.h>
 #include <string.h>
 #include "leds.h"
 

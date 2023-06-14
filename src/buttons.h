@@ -17,7 +17,7 @@
 #ifndef __BUTTONS_H
 #define __BUTTONS_H
 
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 
 /**
  * @brief Type of button event

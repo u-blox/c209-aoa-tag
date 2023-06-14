@@ -19,7 +19,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <bluetooth/addr.h>
+#include <zephyr/bluetooth/addr.h>
 
 #define MAC_ADDR_LEN 6
 

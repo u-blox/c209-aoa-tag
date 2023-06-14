@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-#include <logging/log.h>
-#include <device.h>
-#include <drivers/sensor.h>
-#include <drivers/i2c.h>
-#include <pm/pm.h>
-#include <pm/device.h>
+#include <zephyr/logging/log.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/sensor.h>
+#include <zephyr/drivers/i2c.h>
+#include <zephyr/pm/pm.h>
+#include <zephyr/pm/device.h>
 #include <lis2dw12_reg.h>
 
 LOG_MODULE_REGISTER(sensors, LOG_LEVEL_DBG);
@@ -106,7 +106,7 @@ bool sensorsGetLis2dw12(int16_t *x, int16_t *y, int16_t *z)
     const struct device *sensor = DEVICE_DT_GET_ANY(st_lis2dw12);
 
     if (sensor == NULL) {
-        LOG_ERR("Could not get %s device", DT_LABEL(DT_INST(0, st_lis2dw12)));
+        LOG_ERR("Could not get LIS2DW12 device");
         return false;
     }
 

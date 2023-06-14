@@ -16,23 +16,23 @@
 
 #include "buttons.h"
 
-#include <zephyr.h>
-#include <device.h>
+#include <zephyr/kernel.h>
+#include <zephyr/device.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/__assert.h>
+#include <zephyr/sys/__assert.h>
 #include <assert.h>
-#include <drivers/uart.h>
-#include <device.h>
-#include <drivers/sensor.h>
-#include <pm/pm.h>
-#include <pm/device.h>
-#include <sys/reboot.h>
+#include <zephyr/drivers/uart.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/sensor.h>
+#include <zephyr/pm/pm.h>
+#include <zephyr/pm/device.h>
+#include <zephyr/sys/reboot.h>
 #include "bt_util.h"
 #include "storage.h"
 #include "version_config.h"
-#include <logging/log.h>
+#include <zephyr/logging/log.h>
 #include "bt_adv.h"
 #include "at_host.h"
 #include "sensors.h"

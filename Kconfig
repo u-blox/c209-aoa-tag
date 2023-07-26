@@ -59,6 +59,16 @@ menu "AoA Tag"
     default EXT_ADV_INT_MS_MIN
     range EXT_ADV_INT_MS_MIN 16384
 
+    config TESTABLE_BUILD
+	    bool
+	prompt "Tester build"
+	help
+		"When enabled, this boolean prevents tags from being
+		shut off after 10 seconds of not compunicating
+		from start. It also disables restart each
+		10 minutes."
+    default n
+
 endmenu
 
 module = APPLICATION_MODULE

@@ -48,7 +48,9 @@ LOG_MODULE_REGISTER(app, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
 // In order to avoid accidental collisions between tags we restart adv. every now and then.
 // Comment out to disable this.
+#ifndef CONFIG_TESTABLE_BUILD
 #define ADV_RESTART_INTERVAL    (10 * 60 * 1000) // 10 min
+#endif
 
 static void btReadyCb(int err);
 static void onButtonPressCb(buttonPressType_t type);

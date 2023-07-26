@@ -10,6 +10,8 @@ west build -c -p -b ubx_evkninab4_nrf52833 -d build/debug -- -DNRF_DFU_BOOT_SUPP
 
 west build -c -p -b ubx_evkninab4_nrf52833 -d build/release -- -DNRF_DFU_BOOT_SUPPORT=1 -DRELEASE=1 -DBUILD_NUMBER=%1 || goto :error
 
+west build -c -p -b ubx_evkninab4_nrf52833 -d build/release -- -DEXTRA_CONF_FILE=nuts_test.conf -DNRF_DFU_BOOT_SUPPORT=1 -DRELEASE=1 -DBUILD_NUMBER=%1 || goto :error
+
 goto :EOF
 
 :error

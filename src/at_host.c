@@ -131,7 +131,9 @@ int atHostStart(void)
         k_work_init(&handleCommandWork, doCommandWork);
         k_work_init(&cancelUartAtWork, disableAtUartMode);
         k_work_init(&restartRxWork, restartUartRxAfterError);
+#ifndef CONFIG_TESTABLE_BUILD
         k_timer_start(&disableAtUartModeTimer, K_SECONDS(10), K_NO_WAIT);
+#endif
     } else {
         LOG_ERR("uart_configure failed: %d", err);
         return -EFAULT;

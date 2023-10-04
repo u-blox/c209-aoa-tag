@@ -15,14 +15,6 @@
 	};
 };
 
-
-/* Delete partitions specified on the board dts file */
-/delete-node/ &boot_partition;
-/delete-node/ &slot0_partition;
-/delete-node/ &storage_partition;
-/delete-node/ &scratch_partition;
-/delete-node/ &slot1_partition;
-
 &pinctrl {
 	i2c0_default: i2c0_default {
 		group1 {
@@ -37,34 +29,5 @@
 				<NRF_PSEL(TWIM_SCL, 0, 30)>;
 			low-power-enable;
 		};
-	};
-};
-
-&flash0 {
-	partitions {
-		compatible = "fixed-partitions";
-		#address-cells = <1>;
-		#size-cells = <1>;
-
-		/* Define your partitions here; see below */
-		boot_partition: partition@0 {
-			label = "mcuboot";
-			reg = <0x00000000 0x1000>;
-		};
-		slot0_partition: partition@1000 {
-			label = "image-0";
-			reg = <0x00001000 0x6B000>;
-		};
-		storage_partition: partition@6C000 {
-			label = "storage";
-			reg = <0x0006C000 0x00004000>;
-		};
-	};
-};
-
-/ {
-	chosen {
-		zephyr,code-partition = &slot0_partition;
-		zephyr,flash = &flash0;
 	};
 };

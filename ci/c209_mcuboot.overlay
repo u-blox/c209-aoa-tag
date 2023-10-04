@@ -1,0 +1,35 @@
+/* Delete partitions specified on the board dts file */
+/delete-node/ &boot_partition;
+/delete-node/ &slot0_partition;
+/delete-node/ &storage_partition;
+/delete-node/ &scratch_partition;
+/delete-node/ &slot1_partition;
+
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* Define your partitions here; see below */
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x00000000 0x10000>;
+		};
+		slot0_partition: partition@10000 {
+			label = "image-0";
+			reg = <0x00010000 0x6A000>;
+		};
+		storage_partition: partition@7A000 {
+			label = "storage";
+			reg = <0x0007A000 0x00003000>;
+		};
+	};
+};
+
+/ {
+	chosen {
+		zephyr,code-partition = &slot0_partition;
+		zephyr,flash = &flash0;
+	};
+};

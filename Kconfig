@@ -61,11 +61,11 @@ menu "AoA Tag"
 
     config TESTABLE_BUILD
 	    bool
-	prompt "Tester build"
+	prompt "Testable build for CI"
 	help
-		"When enabled, this boolean prevents tags from being
-		shut off after 10 seconds of not compunicating
-		from start. It also disables restart each
+		"When enabled, this boolean prevents UART from being
+		shut off after 10 seconds of not communicating
+		from start. It also disables per. adv. restart each
 		10 minutes."
     default n
 

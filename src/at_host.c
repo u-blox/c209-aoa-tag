@@ -37,6 +37,8 @@
 #include "at_host.h"
 #include "sensors.h"
 
+#include <hal/nrf_power.h>
+
 LOG_MODULE_REGISTER(at_host, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
 #define UART_RX_BUF_NUM 2
@@ -52,6 +54,10 @@ static void sendString(char *str);
 static bool testLis2dw(void);
 static bool testBme280(void);
 static bool testApds(void);
+
+#ifdef CONFIG_TESTABLE_BUILD
+static bool handleFwUpdate();
+#endif
 
 static void uartCallback(const struct device *dev, struct uart_event *evt, void *user_data);
 static void doCommandWork(struct k_work *work);
@@ -324,6 +330,18 @@ bool atHostHandleCommand(const uint8_t *const inAtBuf, uint32_t commandLen, atOu
         } else {
             outputRsp(ERROR_STR);
         }
+    } else if (strncmp("AT+UFWUPD", inAtBuf, 9) == 0) {
+#ifdef CONFIG_TESTABLE_BUILD
+        errno = 0;
+        if (errno == 0) {
+            if (!handleFwUpdate()) {
+                validCommand = false;
+            }
+        } else {
+            validCommand = true;
+            outputRsp("OK\r\n");
+        }
+#endif
     } else {
         validCommand = false;
         outputRsp(ERROR_STR);
@@ -433,3 +451,16 @@ static bool testApds(void)
 {
     return sensorsDetectApds();
 }
+
+#ifdef CONFIG_TESTABLE_BUILD
+static bool handleFwUpdate()
+{
+    // Internal to u-blox MCUBoot fork.
+    // 13 == 1mbit baudrate
+    int baudrateIndex = 13;
+    nrf_power_gpregret2_set(NRF_POWER, 0x80 | (baudrateIndex & 0xf));
+    k_sleep(K_MSEC(200));
+    sys_reboot(SYS_REBOOT_COLD);
+    return true;
+}
+#endif

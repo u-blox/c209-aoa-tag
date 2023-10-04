@@ -14,7 +14,7 @@
 
 cmake_minimum_required(VERSION 3.13.1)
 
-set(DTC_OVERLAY_FILE  "c209.overlay")
+list(APPEND DTC_OVERLAY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/c209.overlay)
 
 set(CONF_FILE ${CMAKE_CURRENT_SOURCE_DIR}/prj.conf)
 if(DEFINED RELEASE)
@@ -31,6 +31,7 @@ if(DEFINED NRF_DFU_BOOT_SUPPORT)
 message("NRF_DFU_BOOT_SUPPORT BUILD")
 add_definitions("-DNRF_DFU_BOOT_SUPPORT=${NRF_DFU_BOOT_SUPPORT}")
 list(APPEND CONF_FILE ${CMAKE_CURRENT_SOURCE_DIR}/prj_dfu_boot.conf)
+list(APPEND DTC_OVERLAY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/c209_nrf_boot.overlay)
 endif()
 
 find_package(Zephyr HINTS $ENV{ZEPHYR_BASE})

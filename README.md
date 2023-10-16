@@ -1,5 +1,5 @@
 # AoA Tag Sample Application
-This repository contains an example Tag application for use with u-blox C211 Bluetooth Direction Finding Anchor. It is intended to be flashed on the u-blox C209 Tag which comes bundled with a C211 in the XPLR-AOA-1 and XPLR-AOA-2 kits.
+This repository contains an example Tag application for use with u-blox ANT-B10 and C211 Bluetooth Direction Finding Anchor. It is intended to be flashed on the u-blox C209 Tag which comes with XPLR-AOA-1, XPLR-AOA-2 and XPLR-AOA3 kits. C209 AoA Tag releases from v2.0.0 are compatible with u-connectLoate 2.0 and later.  
 
 # Getting the code
 `git clone https://github.com/u-blox/c209-aoa-tag.git`

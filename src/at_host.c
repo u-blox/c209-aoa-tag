@@ -272,7 +272,7 @@ bool atHostHandleCommand(const uint8_t *const inAtBuf, uint32_t commandLen, atOu
     } else if (strncmp("AT+CPWROFF", inAtBuf, 10) == 0 && commandLen == 10) {
         outputRsp(OK_STR);
         k_sleep(K_MSEC(200));
-        sys_reboot(SYS_REBOOT_COLD);
+        sys_reboot(SYS_REBOOT_WARM);
     } else if (strncmp("AT+TXPWR=", inAtBuf, 9) == 0 && commandLen > 9) {
         errno = 0;
         long power = strtol(&inAtBuf[9], NULL, 10);

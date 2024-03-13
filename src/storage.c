@@ -15,11 +15,11 @@
  */
 
 #include "storage.h"
-#include <device.h>
-#include <drivers/flash.h>
-#include <storage/flash_map.h>
-#include <fs/nvs.h>
-#include <logging/log.h>
+#include <zephyr/device.h>
+#include <zephyr/drivers/flash.h>
+#include <zephyr/storage/flash_map.h>
+#include <zephyr/fs/nvs.h>
+#include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(storage, CONFIG_APPLICATION_MODULE_LOG_LEVEL);
 
@@ -35,10 +35,10 @@ int storageInit(void)
     int rc = 0;
     /* define the nvs file system by settings with:
      *  sector_size equal to the pagesize,
-     *  starting at FLASH_AREA_OFFSET(storage)
+     *  starting at FIXED_PARTITION_OFFSET(storage_partition)
      */
-    fs.offset = FLASH_AREA_OFFSET(storage);
-    fs.flash_device = FLASH_AREA_DEVICE(storage);
+    fs.offset = FIXED_PARTITION_OFFSET(storage_partition);
+    fs.flash_device = FIXED_PARTITION_DEVICE(storage_partition);
     if (!device_is_ready(fs.flash_device)) {
         LOG_ERR("Flash device %s is not ready\n", fs.flash_device->name);
         return -1;
@@ -52,7 +52,7 @@ int storageInit(void)
         return -1;
     }
     fs.sector_size = info.size;
-    fs.sector_count = FLASH_AREA_SIZE(storage) / info.size;
+    fs.sector_count = FIXED_PARTITION_SIZE(storage_partition) / info.size;
 
     rc = nvs_mount(&fs);
     if (rc) {

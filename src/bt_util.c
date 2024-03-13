@@ -15,7 +15,7 @@
  */
 
 #include "bt_util.h"
-#include <zephyr.h>
+#include <zephyr/kernel.h>
 #include <string.h>
 #include <ctype.h>
 

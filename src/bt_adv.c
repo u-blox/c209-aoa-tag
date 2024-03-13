@@ -15,16 +15,16 @@
  */
 
 #include "bt_adv.h"
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/hci.h>
-#include <sys/__assert.h>
-#include <logging/log.h>
+#include <zephyr/bluetooth/bluetooth.h>
+#include <zephyr/bluetooth/hci.h>
+#include <zephyr/sys/__assert.h>
+#include <zephyr/logging/log.h>
 
-#include <bluetooth/bluetooth.h>
-#include <bluetooth/hci.h>
-#include <bluetooth/direction.h>
-#include <sys/byteorder.h>
-#include <sys/util.h>
+#include <zephyr/bluetooth/bluetooth.h>
+#include <zephyr/bluetooth/hci.h>
+#include <zephyr/bluetooth/direction.h>
+#include <zephyr/sys/byteorder.h>
+#include <zephyr/sys/util.h>
 
 #if defined(CONFIG_BT_NUS)
 #include <bluetooth/services/nus.h>

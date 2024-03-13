@@ -17,7 +17,7 @@
 #ifndef __SENSORS_H
 #define __SENSORS_H
 #include <inttypes.h>
-#include <drivers/sensor.h>
+#include <zephyr/drivers/sensor.h>
 
 /**
  * @brief   Init the sensors.

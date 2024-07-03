@@ -107,10 +107,6 @@ Please review the [user guide](https://www.u-blox.com/en/docs/UBX-21004616) for 
 # More information about the hardware kits
 For more information about the hardware kits as well as ordering information, please visit the [XPLR-AOA-1 product page](https://www.u-blox.com/en/product/xplr-aoa-1-kit) and [XPLR-AOA-2 product page](https://www.u-blox.com/en/product/xplr-aoa-2-kit).
 
-# License
-The software in this repository is Apache 2.0 licensed and copyright u-blox:
-
-In all cases copyright, and our thanks, remain with the original authors.
 
 # Disclaimer
 Copyright (C) u-blox

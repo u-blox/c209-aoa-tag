@@ -1,17 +1,15 @@
 &arduino_i2c {
-    status = "okay";
+	status = "okay";
 
-    lis2dw12@19 {
+	lis2dw12: lis2dw12@19 {
 		compatible = "st,lis2dw12";
 		reg = <0x19>;
-		label = "LIS2DW12";
 		power-mode = <0>;
 	};
 
-	bme280@76 {
+	bme280: bme280@76 {
 		compatible = "bosch,bme280";
 		reg = <0x76>;
-		label = "BME280_I2C";
 	};
 };
 

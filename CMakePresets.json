@@ -1,0 +1,37 @@
+{
+    "version": 2,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 20
+    },
+    "configurePresets": [
+        {
+            "name": "build",
+            "displayName": "Build for EVK NINA B4 NRF52833 (Debug)",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "NCS_TOOLCHAIN_VERSION": "NONE",
+                "BOARD": "ubx_evkninab4_nrf52833",
+                "DTC_OVERLAY_FILE": "${sourceDir}/c209.overlay",
+                "CONFIG_DEBUG_OPTIMIZATIONS": "y",
+                "CONFIG_DEBUG_THREAD_INFO": "y",
+                "CONF_FILE": "${sourceDir}/prj.conf;${sourceDir}/prj_debug.conf"
+            }
+        },
+        {
+            "name": "build",
+            "displayName": "Build for EVK NINA B4 NRF52833 (Release)",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "NCS_TOOLCHAIN_VERSION": "NONE",
+                "BOARD": "ubx_evkninab4_nrf52833",
+                "DTC_OVERLAY_FILE": "${sourceDir}/c209.overlay",
+                "CONFIG_DEBUG_OPTIMIZATIONS": "y",
+                "CONFIG_DEBUG_THREAD_INFO": "y",
+                "CONF_FILE": "${sourceDir}/prj.conf;${sourceDir}/prj_release.conf"
+            }
+        }
+    ]
+}

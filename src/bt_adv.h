@@ -17,8 +17,8 @@
 #ifndef __BT_ADV_H
 #define __BT_ADV_H
 
-#include <zephyr.h>
-#include <bluetooth/bluetooth.h>
+#include <zephyr/kernel.h>
+#include <zephyr/bluetooth/bluetooth.h>
 
 #define EDDYSTONE_INSTANCE_ID_LEN   6
 #define EDDYSTONE_NAMESPACE_LENGFTH 10

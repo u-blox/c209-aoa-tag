@@ -10,7 +10,7 @@ For more detailed instructions go to the offical [nRF Connect Getting Started Gu
 
 ## Download nRF Connect and Toolchain
 - Open nRF Connect for Desktop and open the Toolchain Manager.
-- Download nRF Connect SDK v2.1.0.
+- Download nRF Connect SDK v2.7.0.
 
 ### Building with nRF Connect VSCode plugin
 - In Visual Studio Code go to marketplace and search for "nrf connect".
@@ -27,7 +27,7 @@ For more detailed instructions go to the offical [nRF Connect Getting Started Gu
 
 ### Building with command line
 - Open nRF Connect for Desktops Toolchain Manager.
-- Right next to the "nRF Connect SDK v2.1.0" you have a dropdown, click "Open bash". This step is not required, but it will set up the necessary environment variables for you.
+- Right next to the "nRF Connect SDK v2.7.0" you have a dropdown, click "Open bash". This step is not required, but it will set up the necessary environment variables for you.
 - `cd` to project folder
 - `west build -b ubx_evkninab4_nrf52833`
 - `west flash`
@@ -88,6 +88,13 @@ With this setup following power consumption is achieved with the u-blox C209 tag
 | 100                     | 92                     |
 | 250                     | 56                     |
 | 1000                    | 38                     |
+
+# nRF Connect patches
+Open a terminal in nRF Connect SDK's `zephyr` folder, for example `~/ncs/v2.7.0/zephyr`
+Then run:
+```
+git apply -p1 --ignore-whitespace <this_cloned_repo_path>/patches/aux_offset_ncs_2_7.patch
+```
 
 ## C209 specific
 Due to the design of the C209 HW by default there is a ~300uA current leak coming from the LIS_INT pin. This is due to a external pullup resistor on this pin and the fact that LIS2DW12 by default have an internal pulldown on the same pin. Fortunately LIS2DW12 have a configuration to disable the internal pulldown on INT1 pin and to make the INT1 pin active low instead. The current codebase does not use the LIS_INT/INT1 pin functionality, however if in future it is make sure to configure and check so that the Zephyr driver can handle swapped polarity of INT1/2 pins of the LIS2DW12.

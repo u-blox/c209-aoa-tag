@@ -22,7 +22,7 @@
 #include "leds.h"
 #include "bt_adv.h"
 #include "buttons.h"
-#include <zephyr/random/rand32.h>
+#include <zephyr/random/random.h>
 #include <zephyr/sys/__assert.h>
 #include <zephyr/device.h>
 #include <zephyr/drivers/sensor.h>
@@ -86,7 +86,7 @@ static uint8_t uuid[EDDYSTONE_INSTANCE_ID_LEN];
 K_THREAD_DEFINE(blinkThreadId, BLINK_STACKSIZE, blink, NULL, NULL, NULL, BLINK_PRIORITY, 0,
                 K_TICKS_FOREVER);
 
-void main(void)
+int main(void)
 {
     uint8_t randDelayMs;
     bt_addr_le_t addr;
@@ -127,10 +127,12 @@ void main(void)
     int err = bt_nus_init(&nus_cb);
     if (err) {
         LOG_ERR("Failed to initialize UART service (err: %d)", err);
-        return;
+        return -1;
     }
 #endif
     k_thread_start(blinkThreadId);
+
+    return 0;
 }
 
 static void blink(void)

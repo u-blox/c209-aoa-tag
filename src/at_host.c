@@ -458,7 +458,7 @@ static bool handleFwUpdate()
     // Internal to u-blox MCUBoot fork.
     // 13 == 1mbit baudrate
     int baudrateIndex = 13;
-    nrf_power_gpregret2_set(NRF_POWER, 0x80 | (baudrateIndex & 0xf));
+    nrf_power_gpregret_set(NRF_POWER, 1, 0x80 | (baudrateIndex & 0xf));
     k_sleep(K_MSEC(200));
     sys_reboot(SYS_REBOOT_COLD);
     return true;

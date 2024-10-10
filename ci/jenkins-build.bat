@@ -1,6 +1,6 @@
-PATH=.\bin;C:\u-blox\ncs\v2.1.0\toolchain\opt\bin;C:\u-blox\ncs\v2.1.0\toolchain\opt\bin\Scripts;%PATH%
+PATH=.\bin;C:\u-blox\ncs\toolchains\ce3b5ff664\opt\bin;C:\u-blox\ncs\toolchains\ce3b5ff664\opt\bin\Scripts;%PATH%
 
-SET ZEPHYR_BASE=C:\u-blox\ncs\v2.1.0\zephyr
+SET ZEPHYR_BASE=C:\u-blox\ncs\v2.7.0\zephyr
 
 west build -c -p -b ubx_evkninab4_nrf52833 -d build/debug-no-boot -- -DBUILD_NUMBER=%1 || goto :error
 

@@ -10,7 +10,7 @@ west build -c -p -b ubx_evkninab4_nrf52833 -d build/debug -- -DNRF_DFU_BOOT_SUPP
 
 west build -c -p -b ubx_evkninab4_nrf52833 -d build/release -- -DNRF_DFU_BOOT_SUPPORT=1 -DRELEASE=1 -DBUILD_NUMBER=%1 || goto :error
 
-west build -c -p -b ubx_evkninab4_nrf52833 -d build/release-mcuboot -- -DOVERLAY_CONFIG:STRING="ci/testable.conf" -DDTC_OVERLAY_FILE:STRING="ci/c209_mcuboot.overlay" -DRELEASE=1 -DBUILD_NUMBER=%1 || goto :error
+west build -c -p -b ubx_evkninab4_nrf52833 -d build/release-mcuboot -- -DMCUBOOT_BOOT_SUPPORT=1 -DRELEASE=1 -DBUILD_NUMBER=%1 || goto :error
 
 goto :EOF
 

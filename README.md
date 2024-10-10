@@ -90,11 +90,7 @@ With this setup following power consumption is achieved with the u-blox C209 tag
 | 1000                    | 38                     |
 
 # nRF Connect patches
-Open a terminal in nRF Connect SDK's `zephyr` folder, for example `~/ncs/v2.7.0/zephyr`
-Then run:
-```
-git apply -p1 --ignore-whitespace <this_cloned_repo_path>/patches/aux_offset_ncs_2_7.patch
-```
+Patches are automatically done when doing a pristine build.
 
 ## C209 specific
 Due to the design of the C209 HW by default there is a ~300uA current leak coming from the LIS_INT pin. This is due to a external pullup resistor on this pin and the fact that LIS2DW12 by default have an internal pulldown on the same pin. Fortunately LIS2DW12 have a configuration to disable the internal pulldown on INT1 pin and to make the INT1 pin active low instead. The current codebase does not use the LIS_INT/INT1 pin functionality, however if in future it is make sure to configure and check so that the Zephyr driver can handle swapped polarity of INT1/2 pins of the LIS2DW12.

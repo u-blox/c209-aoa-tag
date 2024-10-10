@@ -34,6 +34,50 @@ list(APPEND CONF_FILE ${CMAKE_CURRENT_SOURCE_DIR}/prj_dfu_boot.conf)
 list(APPEND DTC_OVERLAY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/c209_nrf_boot.overlay)
 endif()
 
+if(DEFINED MCUBOOT_BOOT_SUPPORT)
+message("MCUBOOT_BOOT_SUPPORT BUILD")
+add_definitions("-DMCUBOOT_BOOT_SUPPORT=${MCUBOOT_BOOT_SUPPORT}")
+list(APPEND CONF_FILE ${CMAKE_CURRENT_SOURCE_DIR}/ci/testable.conf)
+list(APPEND DTC_OVERLAY_FILE ${CMAKE_CURRENT_SOURCE_DIR}/ci/c209_mcuboot.overlay)
+endif()
+
+# For applying SDK patches automatically on build.
+function(applyGitPatchFiles patchFolder applyDir)
+  message("Applying git patches from ${patchFolder} in directory ${applyDir}")
+  file(GLOB PATCHES ${patchFolder})
+  if (PATCHES)
+    message(STATUS "Patches: ${PATCHES}")
+    foreach(PATCH ${PATCHES})
+      message(STATUS "Applying ${PATCH}")
+      execute_process(
+        COMMAND git apply -p1 --ignore-whitespace
+        WORKING_DIRECTORY "${applyDir}"
+        INPUT_FILE "${PATCH}"
+        OUTPUT_VARIABLE OUTPUT
+        RESULT_VARIABLE RESULT)
+      if (RESULT EQUAL 0)
+        message(STATUS "Patch applied: ${PATCH}")
+      else()
+        # Unfortunately although patch will recognise that a patch is already
+        # applied it will still return an error.
+        execute_process(
+          COMMAND git apply -p1 --reverse --check --ignore-whitespace
+          WORKING_DIRECTORY "${applyDir}"
+          INPUT_FILE "${PATCH}"
+          OUTPUT_VARIABLE OUTPUT
+          RESULT_VARIABLE RESULT2)
+        if (RESULT2 EQUAL 0)
+          message(STATUS "Patch was already applied, ignore errors above: ${PATCH}")
+        else()
+          message(FATAL_ERROR "Error applying patch ${PATCH}")
+        endif()
+      endif()
+    endforeach(PATCH)
+  endif()
+endfunction()
+
+applyGitPatchFiles("${CMAKE_SOURCE_DIR}/sdk-patches/zephyr/*.patch" "$ENV{ZEPHYR_BASE}/")
+
 find_package(Zephyr HINTS $ENV{ZEPHYR_BASE})
 project(direction_finding_beacon)
 

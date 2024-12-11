@@ -1,5 +1,7 @@
 # AoA Tag Sample Application
-This repository contains an example Tag application for use with u-blox ANT-B10 and C211 Bluetooth Direction Finding Anchor. It is intended to be flashed on the u-blox C209 Tag which comes with XPLR-AOA-1, XPLR-AOA-2 and XPLR-AOA3 kits. C209 AoA Tag releases from v2.0.0 are compatible with u-connectLoate 2.0 and later.  
+This repository contains an example Tag application for use with u-blox ANT-B10 and ANT-B11 Bluetooth Direction Finding Anchors. It is intended to be flashed on the u-blox C209 Tag which comes with XPLR-AOA-3 kits. C209 AoA Tag releases from v2.0.0 are compatible with u-locateEmbed (previously named u-connectLocate) 2.0 and later.
+
+For more information about u-locateEmbed please refer to the [u-locateEmbed product page](https://www.u-blox.com/en/product/u-locateembed).
 
 # Getting the code
 `git clone https://github.com/u-blox/c209-aoa-tag.git`
@@ -38,7 +40,7 @@ The `prj.conf` is split into multiple files, first there is `prj_base.conf` and 
 Then there are `prj_debug.conf` and `prj_release.conf`, these contain configurations specific to debug or release, for example compiler optimization level and logging config. By default a debug build is made, to build release run `west build -p -b ubx_evkninab4_nrf52833 -- -DRELEASE=1`. Those options can also be input when adding the application in the nRF Connect VS Code plugin under "Extra CMake arguments".
 
 ## Running on other boards
-This sample application primarily supports the u-blox **C209** application board bundled together with the u-blox **C211** or **ANT-B10** in the **XPLR-AOA** kits.
+This sample application primarily supports the u-blox **C209** application board bundled together with the u-blox **ANT-B10** in the **XPLR-AOA-3** kits.
 
 However getting it up and running on other boards which either use NINA-B4 module (like **NINA-B4-EVK**) or a NRF52833 DK is only a matter of selecting the appropriate board file.
 
@@ -102,11 +104,13 @@ To automatically format the code run:
 `./tools/format_code.sh`
 
 # Using the application
-Please review the [user guide](https://www.u-blox.com/en/docs/UBX-21004616) for more details on how to use the XPLR-AOA-1 and XPLR-AOA-2 kits.
+Please review the [user guide](https://www.u-blox.com/en/docs/UBX-22006906) for more details on how to use the XPLR-AOA-3 kits.
 
 # More information about the hardware kits
-For more information about the hardware kits as well as ordering information, please visit the [XPLR-AOA-1 product page](https://www.u-blox.com/en/product/xplr-aoa-1-kit) and [XPLR-AOA-2 product page](https://www.u-blox.com/en/product/xplr-aoa-2-kit).
+For more information about the hardware kits used for evaluation as well as ordering information, please visit the [XPLR-AOA-3 product page](https://www.u-blox.com/en/product/xplr-aoa-3-kit).
 
+# u-blox indoor positioning solutions
+Refer to the [u-locate product page](https://www.u-blox.com/en/ulocate) for more information about the other components of the u-locate solution from u-blox.
 
 # Disclaimer
 Copyright (C) u-blox
